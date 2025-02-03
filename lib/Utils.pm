@@ -40,8 +40,12 @@ sub check_config {
         "ftppass", "ftphost", "remote_directory", "emailsubjectline",
         "archive", "transfermethod"
     );
+
     my @missing = ();
+    
     for my $i ( 0 .. $#reqs ) {
+        # print each one:
+        logmsg("Required config: $reqs[$i]", $conf->{"logfile"}, 0);
         push( @missing, $reqs[$i] ) if ( !$conf->{ $reqs[$i] } );
     }
 
