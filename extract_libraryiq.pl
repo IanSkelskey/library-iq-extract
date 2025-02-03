@@ -52,6 +52,8 @@ GetOptions(
 my %conf = %{ read_config($config_file) };
 my $log_file = $conf{logfile} || 'libraryiq.log';
 
+logmsg("Confiuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
+
 # Verify that required configuration values are set
 die "Configuration value 'libraryname' is missing" unless $conf{libraryname};
 die "Configuration value 'logfile' is missing" unless $conf{logfile};
