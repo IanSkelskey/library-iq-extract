@@ -29,7 +29,7 @@ use Queries qw(
     get_hold_ids_sql
     get_hold_detail_sql
 );
-use Utils qw(read_config get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz);
+use Utils qw(read_config get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz create_history_table);
 
 ###########################
 # 1) Parse Config & CLI
@@ -60,7 +60,12 @@ my $dbh = get_dbh($db_config);
 logmsg("Connected to DB", $log_file, $debug);
 
 ###########################
-# 3) Get Organization Units
+# 3) Ensure History Table Exists
+###########################
+create_history_table($dbh, $log_file, $debug);
+
+###########################
+# 4) Get Organization Units
 ###########################
 my $libraryname = $conf{libraryname};
 my $include_descendants = exists $conf{include_org_descendants};
@@ -68,14 +73,14 @@ my $org_units = get_org_units($dbh, $libraryname, $include_descendants, sub { lo
 my $pgLibs = join(',', @$org_units);
 
 ###########################
-# 4) Figure out last run vs full
+# 5) Figure out last run vs full
 ###########################
 my $last_run_time = get_last_run_time($dbh, \%conf, \&logmsg);
 my $run_date_filter = $full ? undef : $last_run_time;
 logmsg("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"), $log_file, $debug);
 
 ###########################
-# 5) For each data type, we:
+# 6) For each data type, we:
 #   a) get IDs in chunks
 #   b) for each chunk, fetch details
 #   c) write data to a file
@@ -152,17 +157,16 @@ my $hold_out_file = process_data_type(
 );
 
 ###########################
-# 6) Create tar.gz archive
+# 7) Create tar.gz archive
 ###########################
 my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file);
 my $tar_file = create_tar_gz(\@output_files, $conf{archive}, $conf{filenameprefix}, $log_file, $debug);
 
 ###########################
-# 7) SFTP upload & Email
+# 8) SFTP upload & Email
 ###########################
-my $sftp_error;
 unless ($no_sftp) {
-    $sftp_error = do_sftp_upload(
+    my $sftp_error = do_sftp_upload(
         $conf{ftphost}, 
         $conf{ftplogin}, 
         $conf{ftppass}, 

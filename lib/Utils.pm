@@ -8,7 +8,7 @@ use DB qw(chunked_ids fetch_data_by_ids);
 use Logging qw(logmsg);
 use Archive::Tar;
 
-our @EXPORT_OK = qw(read_config get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz);
+our @EXPORT_OK = qw(read_config get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz create_history_table);
 
 # ----------------------------------------------------------
 # read_config - Read configuration file
@@ -152,8 +152,8 @@ sub get_org_descendants {
 
     my $sth = $dbh->prepare($query);
     $sth->execute();
-    while (my @row = $sth->fetchrow_array) {
-        push( @ret, $row[0] );
+    while (my $row = $sth->fetchrow_array) {
+        push( @ret, $row );
     }
 
     return \@ret;
@@ -191,6 +191,22 @@ sub create_tar_gz {
 
     logmsg("Created tar.gz archive $tar_file", $log_file, $debug);
     return $tar_file;
+}
+
+# ----------------------------------------------------------
+# create_history_table - Create the libraryiq.history table if it doesn't exist
+# ----------------------------------------------------------
+sub create_history_table {
+    my ($dbh, $log_file, $debug) = @_;
+    my $sql = q{
+        CREATE TABLE IF NOT EXISTS libraryiq.history (
+            id serial PRIMARY KEY,
+            key TEXT NOT NULL,
+            last_run TIMESTAMP WITH TIME ZONE DEFAULT '1000-01-01'::TIMESTAMPTZ
+        )
+    };
+    $dbh->do($sql);
+    logmsg("Ensured libraryiq.history table exists", $log_file, $debug);
 }
 
 1;
