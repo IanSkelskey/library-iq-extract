@@ -71,7 +71,7 @@ sub checkCMDArgs {
     );
     my @missing = ();
     for my $i ( 0 .. $#reqs ) {
-        push( @missing, @reqs[$i] ) if ( !$conf{ $reqs[$i] } );
+        push( @missing, $reqs[$i] ) if ( !$conf{ $reqs[$i] } );
     }
 
     if ( $#missing > -1 ) {
