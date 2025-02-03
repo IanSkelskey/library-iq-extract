@@ -30,6 +30,49 @@ sub read_config {
 }
 
 # ----------------------------------------------------------
+# check_config - Check configuration values
+# ----------------------------------------------------------
+sub check_config {
+    my ($conf) = @_;
+
+    my @reqs = (
+        "logfile", "tempdir", "libraryname", "ftplogin",
+        "ftppass", "ftphost", "remote_directory", "emailsubjectline",
+        "archive", "transfermethod"
+    );
+    my @missing = ();
+    for my $i ( 0 .. $#reqs ) {
+        push( @missing, $reqs[$i] ) if ( !$conf->{ $reqs[$i] } );
+    }
+
+    if ( $#missing > -1 ) {
+        die "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
+    }
+    if ( !-e $conf->{"tempdir"} ) {
+        die "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
+    }
+
+    if ( !-e $conf->{"archive"} ) {
+        die "Archive folder: " . $conf->{"archive"} . " does not exist.\n";
+    }
+
+    if ( lc $conf->{"transfermethod"} ne 'sftp' ) {
+        die "Transfer method: " . $conf->{"transfermethod"} . " is not supported\n";
+    }
+}
+
+# ----------------------------------------------------------
+# check_cmd_args - Check command line arguments
+# ----------------------------------------------------------
+sub check_cmd_args {
+    my ($config_file) = @_;
+
+    if ( !-e $config_file ) {
+        die "$config_file does not exist. Please provide a path to your configuration file: --config\n";
+    }
+}
+
+# ----------------------------------------------------------
 # get_last_run_time - Get the last run time from the database
 # ----------------------------------------------------------
 sub get_last_run_time {

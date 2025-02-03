@@ -29,7 +29,7 @@ use Queries qw(
     get_hold_ids_sql
     get_hold_detail_sql
 );
-use Utils qw(read_config get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz create_history_table);
+use Utils qw(read_config check_config check_cmd_args get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz create_history_table);
 
 ###########################
 # 1) Parse Config & CLI
@@ -49,49 +49,15 @@ GetOptions(
     "no-sftp"  => \$no_sftp,
 );
 
-# Check command line arguments and configuration file
-my %conf;
-my $log_file;
-checkCMDArgs($config_file);
+# Check command line arguments
+check_cmd_args($config_file);
 
-sub checkCMDArgs {
-    my ($config_file) = @_;
+# Read and check configuration file
+my $conf = read_config($config_file);
+check_config($conf);
 
-    if ( !-e $config_file ) {
-        die "$config_file does not exist. Please provide a path to your configuration file: --config\n";
-    }
-
-    my $conf_ref = read_config($config_file);
-    %conf = %{$conf_ref};
-
-    my @reqs = (
-        "logfile", "tempdir", "libraryname", "ftplogin",
-        "ftppass", "ftphost", "remote_directory", "emailsubjectline",
-        "archive", "transfermethod"
-    );
-    my @missing = ();
-    for my $i ( 0 .. $#reqs ) {
-        push( @missing, $reqs[$i] ) if ( !$conf{ $reqs[$i] } );
-    }
-
-    if ( $#missing > -1 ) {
-        die "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
-    }
-    if ( !-e $conf{"tempdir"} ) {
-        die "Temp folder: " . $conf{"tempdir"} . " does not exist.\n";
-    }
-
-    if ( !-e $conf{"archive"} ) {
-        die "Archive folder: " . $conf{"archive"} . " does not exist.\n";
-    }
-
-    if ( lc $conf{"transfermethod"} ne 'sftp' ) {
-        die "Transfer method: " . $conf{"transfermethod"} . " is not supported\n";
-    }
-
-    $log_file = $conf{"logfile"} || 'libraryiq.log';
-    logmsg("Configuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
-}
+my $log_file = $conf->{logfile} || 'libraryiq.log';
+logmsg("Configuration loaded: ".join(',', map { "$_=$conf->{$_}" } keys %$conf), $log_file, $debug);
 
 ###########################
 # 2) DB Connection
@@ -108,16 +74,16 @@ create_history_table($dbh, $log_file, $debug);
 ###########################
 # 4) Get Organization Units
 ###########################
-my $libraryname = $conf{libraryname};
+my $libraryname = $conf->{libraryname};
 logmsg("Library name: $libraryname", $log_file, $debug);
-my $include_descendants = exists $conf{include_org_descendants};
+my $include_descendants = exists $conf->{include_org_descendants};
 my $org_units = get_org_units($dbh, $libraryname, $include_descendants, sub { logmsg($_[0], $log_file, $debug) });
 my $pgLibs = join(',', @$org_units);
 
 ###########################
 # 5) Figure out last run vs full
 ###########################
-my $last_run_time = get_last_run_time($dbh, \%conf, \&logmsg);
+my $last_run_time = get_last_run_time($dbh, $conf, \&logmsg);
 my $run_date_filter = $full ? undef : $last_run_time;
 logmsg("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"), $log_file, $debug);
 
@@ -136,8 +102,8 @@ my $bib_out_file = process_data_type(
     [qw/id isbn upc mat_type pubdate publisher title author/],
     $dbh,
     $run_date_filter,
-    $conf{chunksize},
-    $conf{tempdir},
+    $conf->{chunksize},
+    $conf->{tempdir},
     $log_file,
     $debug
 );
@@ -150,8 +116,8 @@ my $item_out_file = process_data_type(
     [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/],
     $dbh,
     $run_date_filter,
-    $conf{chunksize},
-    $conf{tempdir},
+    $conf->{chunksize},
+    $conf->{tempdir},
     $log_file,
     $debug
 );
@@ -164,8 +130,8 @@ my $circ_out_file = process_data_type(
     [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_date/],
     $dbh,
     $run_date_filter,
-    $conf{chunksize},
-    $conf{tempdir},
+    $conf->{chunksize},
+    $conf->{tempdir},
     $log_file,
     $debug
 );
@@ -178,8 +144,8 @@ my $patron_out_file = process_data_type(
     [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/],
     $dbh,
     $run_date_filter,
-    $conf{chunksize},
-    $conf{tempdir},
+    $conf->{chunksize},
+    $conf->{tempdir},
     $log_file,
     $debug
 );
@@ -192,8 +158,8 @@ my $hold_out_file = process_data_type(
     [qw/bibrecordid pickup_lib shortname/],
     $dbh,
     $run_date_filter,
-    $conf{chunksize},
-    $conf{tempdir},
+    $conf->{chunksize},
+    $conf->{tempdir},
     $log_file,
     $debug
 );
@@ -202,7 +168,7 @@ my $hold_out_file = process_data_type(
 # 7) Create tar.gz archive
 ###########################
 my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file);
-my $tar_file = create_tar_gz(\@output_files, $conf{archive}, $conf{filenameprefix}, $log_file, $debug);
+my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $log_file, $debug);
 
 ###########################
 # 8) SFTP upload & Email
@@ -210,10 +176,10 @@ my $tar_file = create_tar_gz(\@output_files, $conf{archive}, $conf{filenameprefi
 my $sftp_error;
 unless ($no_sftp) {
     $sftp_error = do_sftp_upload(
-        $conf{ftphost}, 
-        $conf{ftplogin}, 
-        $conf{ftppass}, 
-        $conf{remote_directory}, 
+        $conf->{ftphost}, 
+        $conf->{ftplogin}, 
+        $conf->{ftppass}, 
+        $conf->{remote_directory}, 
         $tar_file,
         sub { logmsg($_[0], $log_file, $debug) }
     );
@@ -227,9 +193,9 @@ unless ($no_sftp) {
 
 unless ($no_email) {
     # Minimal email
-    my @recipients = split /,/, $conf{alwaysemail};  # or success/fail lists
+    my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
     send_email(
-        $conf{fromemail},
+        $conf->{fromemail},
         \@recipients,
         "LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
         ($sftp_error ? "FAILED with: $sftp_error" : "SUCCESS"),
