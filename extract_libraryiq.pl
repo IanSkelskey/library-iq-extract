@@ -160,8 +160,9 @@ my $tar_file = create_tar_gz(\@output_files, $conf{archive}, $conf{filenameprefi
 ###########################
 # 7) SFTP upload & Email
 ###########################
+my $sftp_error;
 unless ($no_sftp) {
-    my $sftp_error = do_sftp_upload(
+    $sftp_error = do_sftp_upload(
         $conf{ftphost}, 
         $conf{ftplogin}, 
         $conf{ftppass}, 
