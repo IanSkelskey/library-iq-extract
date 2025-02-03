@@ -50,6 +50,8 @@ GetOptions(
 );
 
 # Check command line arguments and configuration file
+my %conf;
+my $log_file;
 checkCMDArgs($config_file);
 
 sub checkCMDArgs {
@@ -59,8 +61,8 @@ sub checkCMDArgs {
         die "$config_file does not exist. Please provide a path to your configuration file: --config\n";
     }
 
-    my $conf = read_config($config_file);
-    %conf = %{$conf};
+    my $conf_ref = read_config($config_file);
+    %conf = %{$conf_ref};
 
     my @reqs = (
         "logfile", "tempdir", "libraryname", "ftplogin",
@@ -69,7 +71,7 @@ sub checkCMDArgs {
     );
     my @missing = ();
     for my $i ( 0 .. $#reqs ) {
-        push( @missing, @reqs[$i] ) if ( !$conf{ @reqs[$i] } );
+        push( @missing, @reqs[$i] ) if ( !$conf{ $reqs[$i] } );
     }
 
     if ( $#missing > -1 ) {
@@ -83,15 +85,12 @@ sub checkCMDArgs {
         die "Archive folder: " . $conf{"archive"} . " does not exist.\n";
     }
 
-    if ( !-e $conf{"libraryname"} ) {
-        die "Library name: " . $conf{"libraryname"} . " does not exist.\n";
-    }
-
     if ( lc $conf{"transfermethod"} ne 'sftp' ) {
         die "Transfer method: " . $conf{"transfermethod"} . " is not supported\n";
     }
 
     $log_file = $conf{"logfile"} || 'libraryiq.log';
+    logmsg("Configuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
 }
 
 ###########################
