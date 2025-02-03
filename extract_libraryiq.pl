@@ -52,7 +52,9 @@ GetOptions(
 my %conf = %{ read_config($config_file) };
 my $log_file = $conf{logfile} || 'libraryiq.log';
 
-logmsg("Confiuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
+logmsg("Configuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
+
+logmsg("Library Name(s): $conf{libraryname}", $log_file, $debug);
 
 # Verify that required configuration values are set
 die "Configuration value 'libraryname' is missing" unless $conf{libraryname};
@@ -74,6 +76,7 @@ create_history_table($dbh, $log_file, $debug);
 # 4) Get Organization Units
 ###########################
 my $libraryname = $conf{libraryname};
+logmsg("Library name: $libraryname", $log_file, $debug);
 my $include_descendants = exists $conf{include_org_descendants};
 my $org_units = get_org_units($dbh, $libraryname, $include_descendants, sub { logmsg($_[0], $log_file, $debug) });
 my $pgLibs = join(',', @$org_units);
