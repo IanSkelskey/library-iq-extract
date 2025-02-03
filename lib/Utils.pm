@@ -45,7 +45,7 @@ sub check_config {
     
     for my $i ( 0 .. $#reqs ) {
         # print each one:
-        logmsg("Required config: $reqs[$i]", $conf->{"logfile"}, 0);
+        print "Required config: $reqs[$i]\n";
         push( @missing, $reqs[$i] ) if ( !$conf->{ $reqs[$i] } );
     }
 
