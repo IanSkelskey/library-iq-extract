@@ -14,18 +14,18 @@ This software extracts data from an Evergreen server and securely transfers the 
 ## Directory Structure
 
 ```
-config/
-    └── library_config.conf.example
-lib/
-    ├── DB.pm
-    ├── Email.pm
-    ├── Logging.pm
-    ├── Queries.pm
-    ├── SFTP.pm
-    └── Utils.pm
-.gitignore
-extract_libraryiq.pl
-README.md
+📁 config/
+    └── ⚙️ library_config.conf.example
+📁 lib/
+    ├── 🐪 DB.pm
+    ├── 🐪 Email.pm
+    ├── 🐪 Logging.pm
+    ├── 🐪 Queries.pm
+    ├── 🐪 SFTP.pm
+    └── 🐪 Utils.pm
+📄 .gitignore
+🐪 extract_libraryiq.pl
+📄 README.md
 ```
 
 ## Installation
