@@ -101,10 +101,10 @@ sub get_db_config {
     my $data = $xml->XMLin($evergreen_config_file);
     return {
         db   => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{db},
-        host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings::{databases}->{database}->{host},
-        port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings::{databases}->{database}->{port},
-        user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings::{databases}->{database}->{user},
-        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings::{databases}->{database}->{pw},
+        host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{host},
+        port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{port},
+        user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{user},
+        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{pw},
     };
 }
 
