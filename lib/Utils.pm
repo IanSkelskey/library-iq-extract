@@ -46,6 +46,7 @@ sub check_config {
     for my $i ( 0 .. $#reqs ) {
         # print each one:
         print "Required config: $reqs[$i]\n";
+        print "Config value: $conf->{ $reqs[$i] }\n";
         push( @missing, $reqs[$i] ) if ( !$conf->{ $reqs[$i] } );
     }
 
