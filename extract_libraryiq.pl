@@ -49,16 +49,50 @@ GetOptions(
     "no-sftp"  => \$no_sftp,
 );
 
-my %conf = %{ read_config($config_file, 'libraryiq.log', $debug) };
-my $log_file = $conf{logfile} || 'libraryiq.log';
+# Check command line arguments and configuration file
+checkCMDArgs($config_file);
 
-logmsg("Configuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
+sub checkCMDArgs {
+    my ($config_file) = @_;
 
-logmsg("Library Name(s): $conf{libraryname}", $log_file, $debug);
+    if ( !-e $config_file ) {
+        die "$config_file does not exist. Please provide a path to your configuration file: --config\n";
+    }
 
-# Verify that required configuration values are set
-die "Configuration value 'libraryname' is missing" unless $conf{libraryname};
-die "Configuration value 'logfile' is missing" unless $conf{logfile};
+    my $conf = read_config($config_file);
+    %conf = %{$conf};
+
+    my @reqs = (
+        "logfile", "tempdir", "libraryname", "ftplogin",
+        "ftppass", "ftphost", "remote_directory", "emailsubjectline",
+        "archive", "transfermethod"
+    );
+    my @missing = ();
+    for my $i ( 0 .. $#reqs ) {
+        push( @missing, @reqs[$i] ) if ( !$conf{ @reqs[$i] } );
+    }
+
+    if ( $#missing > -1 ) {
+        die "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
+    }
+    if ( !-e $conf{"tempdir"} ) {
+        die "Temp folder: " . $conf{"tempdir"} . " does not exist.\n";
+    }
+
+    if ( !-e $conf{"archive"} ) {
+        die "Archive folder: " . $conf{"archive"} . " does not exist.\n";
+    }
+
+    if ( !-e $conf{"libraryname"} ) {
+        die "Library name: " . $conf{"libraryname"} . " does not exist.\n";
+    }
+
+    if ( lc $conf{"transfermethod"} ne 'sftp' ) {
+        die "Transfer method: " . $conf{"transfermethod"} . " is not supported\n";
+    }
+
+    $log_file = $conf{"logfile"} || 'libraryiq.log';
+}
 
 ###########################
 # 2) DB Connection
