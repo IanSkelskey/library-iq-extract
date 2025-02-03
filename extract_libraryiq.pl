@@ -52,6 +52,10 @@ GetOptions(
 my %conf = %{ read_config($config_file) };
 my $log_file = $conf{logfile} || 'libraryiq.log';
 
+# Verify that required configuration values are set
+die "Configuration value 'libraryname' is missing" unless $conf{libraryname};
+die "Configuration value 'logfile' is missing" unless $conf{logfile};
+
 ###########################
 # 2) DB Connection
 ###########################
