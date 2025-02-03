@@ -1,0 +1,46 @@
+logfile = /openils/var/log/libraryiq_export.log
+
+tempdir = /tmp
+archive = /path/to/archive
+
+# This needs to match actor.org_unit.shortname
+# This is how the query gets only data for that system/branch
+# comma separated list of branch/system shortnames, case insensitive
+
+libraryname = shortname1, shortname2
+
+# Include descendants?
+# any value here is considered "yes"
+# comment out to remove
+include_org_descendants = 1
+
+# How much of the database to read per loop
+# too small will make this slow, too high will make it slow too
+chunksize = 500
+
+filenameprefix = library
+
+# If enabled, the output file(s) will be tar.gz
+# uncomment to enable
+compressoutput = 1
+
+#
+#SFTP Server to drop off
+#
+# Transfer method. SFTP is the only supported method
+
+transfermethod = sftp
+
+ftphost = sample.com
+ftplogin = sample
+ftppass = sample
+remote_directory = /sample/sample2/sample3
+
+emailsubjectline = Email subject
+
+# only 1 email address for alwaysemail
+alwaysemail = sample@sample.org
+
+fromemail = no-reply-sample@sample.org
+erroremaillist = sample@sample.org, another2@sample.org
+successemaillist = sample@sample.org, another@sample.org

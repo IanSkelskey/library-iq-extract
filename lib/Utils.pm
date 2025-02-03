@@ -1,0 +1,196 @@
+package Utils;
+
+use strict;
+use warnings;
+use Exporter 'import';
+use File::Spec;
+use DB qw(chunked_ids fetch_data_by_ids);
+use Logging qw(logmsg);
+use Archive::Tar;
+
+our @EXPORT_OK = qw(read_config get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz);
+
+# ----------------------------------------------------------
+# read_config - Read configuration file
+# ----------------------------------------------------------
+sub read_config {
+    my ($file) = @_;
+    open my $fh, '<', $file or die "Cannot open config $file: $!";
+    my %c;
+    while(<$fh>) {
+        chomp;
+        s/\r//;
+        next if /^\s*#/;     # skip comments
+        next unless /\S/;    # skip blank lines
+        my ($k,$v) = split(/=/,$_,2);
+        $c{$k} = $v if defined $k and defined $v;
+    }
+    close $fh;
+    return %c;
+}
+
+# ----------------------------------------------------------
+# get_last_run_time - Get the last run time from the database
+# ----------------------------------------------------------
+sub get_last_run_time {
+    my ($dbh, $c, $log) = @_;
+    # You can store last run in a dedicated table, or read from a file, etc.
+    my $sql = "SELECT last_run FROM libraryiq.history WHERE key=? LIMIT 1";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute($c->{libraryname});
+    if (my ($ts) = $sth->fetchrow_array) {
+        $sth->finish;
+        return $ts; # e.g. '2025-01-01'
+    } else {
+        $sth->finish;
+        $log->("No existing entry. Using old date -> 1900-01-01");
+        return '1900-01-01';
+    }
+}
+
+# ----------------------------------------------------------
+# set_last_run_time - Set the last run time in the database
+# ----------------------------------------------------------
+sub set_last_run_time {
+    my ($dbh, $c, $log) = @_;
+    my $sql_upd = q{
+      UPDATE libraryiq.history SET last_run=now() WHERE key=?
+    };
+    my $sth_upd = $dbh->prepare($sql_upd);
+    my $rows = $sth_upd->execute($c->{libraryname});
+    if ($rows == 0) {
+      # Might need an INSERT if row does not exist
+      my $sql_ins = q{
+        INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
+      };
+      $dbh->do($sql_ins, undef, $c->{libraryname});
+    }
+    $log->("Updated last_run time for key=$c->{libraryname}");
+}
+
+# ----------------------------------------------------------
+# process_data_type - Process data type and write to file
+# ----------------------------------------------------------
+sub process_data_type {
+    my ($type, $id_sql, $detail_sql, $columns, $dbh, $date_filter, $chunk_size, $tempdir, $log_file, $debug) = @_;
+    my @chunks = chunked_ids($dbh, $id_sql, $date_filter, $chunk_size);
+    logmsg("Found ".(scalar @chunks)." $type ID chunks", $log_file, $debug);
+
+    my $out_file = File::Spec->catfile($tempdir, "$type.tsv");
+    open my $OUT, '>', $out_file or die "Cannot open $out_file: $!";
+    print $OUT join("\t", @$columns)."\n";
+
+    foreach my $chunk (@chunks) {
+        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
+        foreach my $r (@rows) {
+            print $OUT join("\t", map { $_ // '' } @$r), "\n";
+        }
+    }
+    close $OUT;
+    logmsg("Wrote $type data to $out_file", $log_file, $debug);
+    return $out_file;
+}
+
+# ----------------------------------------------------------
+# get_db_config - Get database configuration from Evergreen config file
+# ----------------------------------------------------------
+sub get_db_config {
+    my ($evergreen_config_file) = @_;
+    my $xml = XML::Simple->new;
+    my $data = $xml->XMLin($evergreen_config_file);
+    return {
+        db   => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{db},
+        host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{host},
+        port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{port},
+        user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{user},
+        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{pw},
+    };
+}
+
+# ----------------------------------------------------------
+# get_org_units - Get organization units based on library shortnames
+# ----------------------------------------------------------
+sub get_org_units {
+    my ($dbh, $libraryname, $include_descendants, $log) = @_;
+    my @ret = ();
+
+    # spaces don't belong here
+    $libraryname =~ s/\s//g;
+
+    my @sp = split( /,/, $libraryname );
+
+    my $libs = join( '$$,$$', @sp );
+    $libs = '$$' . $libs . '$$';
+
+    my $query = "
+    select id
+    from
+    actor.org_unit
+    where lower(shortname) in ($libs)
+    order by 1";
+    $log->($query) if $log;
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    while (my @row = $sth->fetchrow_array) {
+        push( @ret, $row[0] );
+        if ($include_descendants) {
+            my @des = @{ get_org_descendants($dbh, $row[0], $log) };
+            push( @ret, @des );
+        }
+    }
+    return dedupe_array(\@ret);
+}
+
+# ----------------------------------------------------------
+# get_org_descendants - Get organization unit descendants
+# ----------------------------------------------------------
+sub get_org_descendants {
+    my ($dbh, $thisOrg, $log) = @_;
+    my $query   = "select id from actor.org_unit_descendants($thisOrg)";
+    my @ret     = ();
+    $log->($query) if $log;
+
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    while (my @row = $sth->fetchrow_array) {
+        push( @ret, @row[0] );
+    }
+
+    return \@ret;
+}
+
+# ----------------------------------------------------------
+# dedupe_array - Remove duplicates from an array
+# ----------------------------------------------------------
+sub dedupe_array {
+    my $arrRef  = shift;
+    my @arr     = $arrRef ? @{$arrRef} : ();
+    my %deduper = ();
+    $deduper{$_} = 1 foreach (@arr);
+    my @ret = ();
+    while ( ( my $key, my $val ) = each(%deduper) ) {
+        push( @ret, $key );
+    }
+    @ret = sort @ret;
+    return \@ret;
+}
+
+# ----------------------------------------------------------
+# create_tar_gz - Create a tar.gz archive of the given files
+# ----------------------------------------------------------
+sub create_tar_gz {
+    my ($files_ref, $archive_dir, $filenameprefix, $log_file, $debug) = @_;
+    my @files = @$files_ref;
+    my $dt = DateTime->now( time_zone => "local" );
+    my $fdate = $dt->ymd;
+    my $tar_file = File::Spec->catfile($archive_dir, "$filenameprefix" . "_$fdate.tar.gz");
+
+    my $tar = Archive::Tar->new;
+    $tar->add_files(@files);
+    $tar->write($tar_file, COMPRESS_GZIP);
+
+    logmsg("Created tar.gz archive $tar_file", $log_file, $debug);
+    return $tar_file;
+}
+
+1;
