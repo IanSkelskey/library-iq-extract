@@ -49,7 +49,7 @@ GetOptions(
     "no-sftp"  => \$no_sftp,
 );
 
-my %conf = %{ read_config($config_file) };
+my %conf = %{ read_config($config_file, 'libraryiq.log', $debug) };
 my $log_file = $conf{logfile} || 'libraryiq.log';
 
 logmsg("Configuration loaded: ".join(',', map { "$_=$conf{$_}" } keys %conf), $log_file, $debug);
