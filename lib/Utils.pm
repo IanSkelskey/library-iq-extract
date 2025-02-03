@@ -199,6 +199,7 @@ sub create_tar_gz {
 sub create_history_table {
     my ($dbh, $log_file, $debug) = @_;
     my $sql = q{
+        CREATE SCHEMA IF NOT EXISTS libraryiq;
         CREATE TABLE IF NOT EXISTS libraryiq.history (
             id serial PRIMARY KEY,
             key TEXT NOT NULL,
