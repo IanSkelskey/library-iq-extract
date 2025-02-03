@@ -14,23 +14,17 @@ This software extracts data from an Evergreen server and securely transfers the 
 ## Directory Structure
 
 ```
-.gitignore
 config/
-    library_config.conf
-    library_config.conf.example
-examples/
-    evergreen.sql
-export_and_transfer.pl
-extract_libraryiq.pl
-README.md
+    └── library_config.conf.example
 lib/
-    DB.pm
-    Email.pm
-    Logging.pm
-    Queries.pm
-    SFTP.pm
-    Utils.pm
-logs/
+    ├── DB.pm
+    ├── Email.pm
+    ├── Logging.pm
+    ├── Queries.pm
+    ├── SFTP.pm
+    └── Utils.pm
+.gitignore
+extract_libraryiq.pl
 README.md
 ```
 
@@ -38,7 +32,7 @@ README.md
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/mcoia/evergreen-libraryiq-export.git
+    git clone https://github.com/IanSkelskey/library-iq-extract.git
     cd evergreen-libraryiq-export
     ```
 
