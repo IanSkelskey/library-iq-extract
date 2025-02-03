@@ -34,7 +34,7 @@ use Utils qw(read_config get_last_run_time set_last_run_time process_data_type g
 ###########################
 # 1) Parse Config & CLI
 ###########################
-my $config_file = '/path/to/libraryiq.conf';
+my $config_file = 'config/library_config.conf';
 my $evergreen_config_file = '/openils/conf/opensrf.xml';
 my $debug;
 my $full;
@@ -49,7 +49,7 @@ GetOptions(
     "no-sftp"  => \$no_sftp,
 );
 
-my %conf = read_config($config_file, $log_file, $debug);
+my %conf = %{ read_config($config_file) };
 my $log_file = $conf{logfile} || 'libraryiq.log';
 
 ###########################

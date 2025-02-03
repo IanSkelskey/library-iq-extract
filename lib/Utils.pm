@@ -14,7 +14,7 @@ our @EXPORT_OK = qw(read_config get_last_run_time set_last_run_time process_data
 # read_config - Read configuration file
 # ----------------------------------------------------------
 sub read_config {
-    my ($file, $log_file, $debug) = @_;
+    my ($file) = @_;
     open my $fh, '<', $file or die "Cannot open config $file: $!";
     my %c;
     while(<$fh>) {
@@ -26,8 +26,7 @@ sub read_config {
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
-    logmsg("Read config: $_ = $c{$_}", $log_file, $debug) for keys %c;
-    return %c;
+    return \%c;
 }
 
 # ----------------------------------------------------------
@@ -104,7 +103,7 @@ sub get_db_config {
         host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{host},
         port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{port},
         user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{user},
-        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{pw},
+        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings::{databases}->{database}->{pw},
     };
 }
 
