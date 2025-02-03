@@ -153,7 +153,7 @@ sub get_org_descendants {
     my $sth = $dbh->prepare($query);
     $sth->execute();
     while (my @row = $sth->fetchrow_array) {
-        push( @ret, @row[0] );
+        push( @ret, $row[0] );
     }
 
     return \@ret;

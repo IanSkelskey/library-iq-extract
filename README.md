@@ -61,10 +61,22 @@ Edit the `config/library_config.conf` file to set the appropriate values for you
 
 ## Usage
 
+Make sure the script has execute permissions:
+
+```bash
+chmod +x extract_libraryiq.pl
+```
+
 Run the script with the desired options:
 
 ```bash
 ./extract_libraryiq.pl --config config/library_config.conf
+```
+
+Run the script without any network operations (email, SFTP):
+
+```bash
+./extract_libraryiq.pl --config config/library_config.conf --no-email --no-sftp
 ```
 
 ### Command Line Options
@@ -72,6 +84,8 @@ Run the script with the desired options:
 - `--config`: Path to the configuration file (default: library_config.conf).
 - `--debug`: Enable debug mode for more verbose output.
 - `--full`: Perform a full dataset extraction.
+- `--no-email`: Disable email notifications.
+- `--no-sftp`: Disable SFTP file transfer.
 
 ## Modules
 

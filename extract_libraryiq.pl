@@ -38,11 +38,15 @@ my $config_file = '/path/to/libraryiq.conf';
 my $evergreen_config_file = '/openils/conf/opensrf.xml';
 my $debug;
 my $full;
+my $no_email;
+my $no_sftp;
 GetOptions(
     "config=s" => \$config_file,
     "evergreen-config=s" => \$evergreen_config_file,
     "debug"    => \$debug,
     "full"     => \$full,
+    "no-email" => \$no_email,
+    "no-sftp"  => \$no_sftp,
 );
 
 my %conf = read_config($config_file);
@@ -156,28 +160,32 @@ my $tar_file = create_tar_gz(\@output_files, $conf{archive}, $conf{filenameprefi
 ###########################
 # 7) SFTP upload & Email
 ###########################
-my $sftp_error = do_sftp_upload(
-    $conf{ftphost}, 
-    $conf{ftplogin}, 
-    $conf{ftppass}, 
-    $conf{remote_directory}, 
-    $tar_file,
-    sub { logmsg($_[0], $log_file, $debug) }
-);
+unless ($no_sftp) {
+    my $sftp_error = do_sftp_upload(
+        $conf{ftphost}, 
+        $conf{ftplogin}, 
+        $conf{ftppass}, 
+        $conf{remote_directory}, 
+        $tar_file,
+        sub { logmsg($_[0], $log_file, $debug) }
+    );
 
-if ($sftp_error) {
-    logmsg("SFTP ERROR: $sftp_error", $log_file, $debug);
-} else {
-    logmsg("SFTP success", $log_file, $debug);
+    if ($sftp_error) {
+        logmsg("SFTP ERROR: $sftp_error", $log_file, $debug);
+    } else {
+        logmsg("SFTP success", $log_file, $debug);
+    }
 }
 
-# Minimal email
-my @recipients = split /,/, $conf{alwaysemail};  # or success/fail lists
-send_email(
-    $conf{fromemail},
-    \@recipients,
-    "LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
-    ($sftp_error ? "FAILED with: $sftp_error" : "SUCCESS"),
-);
+unless ($no_email) {
+    # Minimal email
+    my @recipients = split /,/, $conf{alwaysemail};  # or success/fail lists
+    send_email(
+        $conf{fromemail},
+        \@recipients,
+        "LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
+        ($sftp_error ? "FAILED with: $sftp_error" : "SUCCESS"),
+    );
+}
 
 exit 0;
