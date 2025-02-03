@@ -103,7 +103,7 @@ sub get_db_config {
         host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{host},
         port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{port},
         user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{user},
-        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings::{databases}->{database}->{pw},
+        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{pw},
     };
 }
 
@@ -152,8 +152,8 @@ sub get_org_descendants {
 
     my $sth = $dbh->prepare($query);
     $sth->execute();
-    while (my $row = $sth->fetchrow_array) {
-        push( @ret, $row );
+    while (my @row = $sth->fetchrow_array) {
+        push( @ret, $row[0] );
     }
 
     return \@ret;
@@ -163,7 +163,7 @@ sub get_org_descendants {
 # dedupe_array - Remove duplicates from an array
 # ----------------------------------------------------------
 sub dedupe_array {
-    my $arrRef  = shift;
+    my ($arrRef) = @_;
     my @arr     = $arrRef ? @{$arrRef} : ();
     my %deduper = ();
     $deduper{$_} = 1 foreach (@arr);
