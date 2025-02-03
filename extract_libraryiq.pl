@@ -49,7 +49,7 @@ GetOptions(
     "no-sftp"  => \$no_sftp,
 );
 
-my %conf = read_config($config_file);
+my %conf = read_config($config_file, $log_file, $debug);
 my $log_file = $conf{logfile} || 'libraryiq.log';
 
 ###########################

@@ -14,7 +14,7 @@ our @EXPORT_OK = qw(read_config get_last_run_time set_last_run_time process_data
 # read_config - Read configuration file
 # ----------------------------------------------------------
 sub read_config {
-    my ($file) = @_;
+    my ($file, $log_file, $debug) = @_;
     open my $fh, '<', $file or die "Cannot open config $file: $!";
     my %c;
     while(<$fh>) {
@@ -26,6 +26,7 @@ sub read_config {
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
+    logmsg("Read config: $_ = $c{$_}", $log_file, $debug) for keys %c;
     return %c;
 }
 
