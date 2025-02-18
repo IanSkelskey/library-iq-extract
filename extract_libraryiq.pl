@@ -34,23 +34,7 @@ use Utils qw(read_config check_config check_cmd_args);
 ###########################
 # 1) Parse Config & CLI
 ###########################
-my $config_file = 'config/library_config.conf';
-my $evergreen_config_file = '/openils/conf/opensrf.xml';
-my $debug;
-my $full;
-my $no_email;
-my $no_sftp;
-GetOptions(
-    "config=s" => \$config_file,
-    "evergreen-config=s" => \$evergreen_config_file,
-    "debug"    => \$debug,
-    "full"     => \$full,
-    "no-email" => \$no_email,
-    "no-sftp"  => \$no_sftp,
-);
-
-# Check command line arguments
-check_cmd_args($config_file);
+my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = read_cmd_args();
 
 # Read and check configuration file
 my $conf = read_config($config_file);
