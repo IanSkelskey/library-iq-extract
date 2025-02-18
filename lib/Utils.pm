@@ -17,12 +17,17 @@ sub read_config {
     my ($file) = @_;
     open my $fh, '<', $file or die "Cannot open config $file: $!";
     my %c;
-    while(<$fh>) {
+    while (<$fh>) {
         chomp;
         s/\r//;
         next if /^\s*#/;     # skip comments
         next unless /\S/;    # skip blank lines
-        my ($k,$v) = split(/=/,$_,2);
+        my ($k, $v) = split(/=/, $_, 2);
+
+        # Trim leading/trailing whitespace
+        $k =~ s/^\s+|\s+$//g if defined $k;
+        $v =~ s/^\s+|\s+$//g if defined $v;
+
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
