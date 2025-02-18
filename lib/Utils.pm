@@ -39,6 +39,11 @@ sub read_config {
 sub check_config {
     my ($conf) = @_;
 
+    print "check_config received configuration:\n";
+    foreach my $key (keys %$conf) {
+        print "$key = $conf->{$key}\n";
+    }
+
     my @reqs = (
         "logfile", "tempdir", "libraryname", "ftplogin",
         "ftppass", "ftphost", "remote_directory", "emailsubjectline",
