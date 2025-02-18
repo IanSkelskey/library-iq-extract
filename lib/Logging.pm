@@ -7,7 +7,7 @@ use Exporter 'import';
 
 our @EXPORT_OK = qw(logmsg init_logging);
 
-my $log_file;
+my $log_file = 'libraryiq_export.log';
 my $debug;
 
 # ----------------------------------------------------------
