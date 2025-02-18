@@ -16,7 +16,7 @@ use lib 'lib';  # or the path to your local modules
 # use DB qw(get_dbh);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
-# use Logging qw(logmsg);
+use Logging qw(logmsg);
 # use Queries qw(
 #     get_bib_ids_sql
 #     get_bib_detail_sql
