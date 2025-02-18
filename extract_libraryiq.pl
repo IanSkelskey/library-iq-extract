@@ -41,12 +41,6 @@ my $conf = read_config($config_file);
 
 # Initialize logging
 my $log_file = $conf->{logfile};
-# Check if log file exists
-unless (-e $log_file) {
-    my $error_msg = "Log file does not exist: $log_file";
-    logmsg("ERROR", $error_msg);
-    die $error_msg;
-}
 init_logging($log_file, $debug);
 
 # Check config and CLI values
