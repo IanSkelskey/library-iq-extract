@@ -8,7 +8,6 @@
 
 use strict;
 use warnings;
-use Getopt::Long;
 # use File::Spec;
 # use XML::Simple;
 
@@ -37,6 +36,7 @@ use Utils qw(read_config read_cmd_args);
 my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = read_cmd_args();
 
 # Read and check configuration file
+# The logger is initialized during this step with the log file and debug flag
 my $conf = read_config($config_file);
 
 # The rest of the code is commented out

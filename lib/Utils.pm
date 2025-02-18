@@ -5,7 +5,7 @@ use warnings;
 use Exporter 'import';
 use File::Spec;
 use DB qw(chunked_ids fetch_data_by_ids);
-use Logging qw(logmsg);
+use Logging qw(logmsg init_logging);
 use Archive::Tar;
 use Getopt::Long;
 
@@ -33,10 +33,10 @@ sub read_config {
     }
     close $fh;
     check_config(\%c);
-    my $log_file = $c{"logfile"} || 'libraryiq.log';
-    logmsg("INFO", "Configuration loaded:", $log_file, 1);
+    init_logging($c{"logfile"}, 0);
+    logmsg("INFO", "Configuration loaded:");
     foreach my $key (keys %c) {
-        logmsg("INFO", "  $key = $c{$key}", $log_file, 1);
+        logmsg("INFO", "  $key = $c{$key}");
     }
     return \%c;
 }
@@ -61,24 +61,24 @@ sub check_config {
 
     if ( $#missing > -1 ) {
         my $msg = "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
-        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg);
         die $msg;
     }
     if ( !-e $conf->{"tempdir"} ) {
         my $msg = "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
-        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg);
         die $msg;
     }
 
     if ( !-e $conf->{"archive"} ) {
         my $msg = "Archive folder: " . $conf->{"archive"} . " does not exist.\n";
-        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg);
         die $msg;
     }
 
     if ( lc $conf->{"transfermethod"} ne 'sftp' ) {
         my $msg = "Transfer method: " . $conf->{"transfermethod"} . " is not supported\n";
-        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg);
         die $msg;
     }
 }
@@ -104,15 +104,18 @@ sub read_cmd_args {
         $log_file = $conf->{"logfile"} if $conf->{"logfile"};
     }
 
-    check_cmd_args($config_file, $log_file);
+    # Initialize logging
+    init_logging($log_file, $debug);
 
-    logmsg("INFO", "Command line arguments loaded:", $log_file, 1);
-    logmsg("INFO", "  config = $config_file", $log_file, 1);
-    logmsg("INFO", "  evergreen-config = $evergreen_config_file", $log_file, 1);
-    logmsg("INFO", "  debug = " . ($debug ? "true" : "false"), $log_file, 1);
-    logmsg("INFO", "  full = " . ($full ? "true" : "false"), $log_file, 1);
-    logmsg("INFO", "  no-email = " . ($no_email ? "true" : "false"), $log_file, 1);
-    logmsg("INFO", "  no-sftp = " . ($no_sftp ? "true" : "false"), $log_file, 1);
+    check_cmd_args($config_file);
+
+    logmsg("INFO", "Command line arguments loaded:");
+    logmsg("INFO", "  config = $config_file");
+    logmsg("INFO", "  evergreen-config = $evergreen_config_file");
+    logmsg("INFO", "  debug = " . ($debug ? "true" : "false"));
+    logmsg("INFO", "  full = " . ($full ? "true" : "false"));
+    logmsg("INFO", "  no-email = " . ($no_email ? "true" : "false"));
+    logmsg("INFO", "  no-sftp = " . ($no_sftp ? "true" : "false"));
 
     return ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp);
 }
@@ -122,11 +125,11 @@ sub read_cmd_args {
 # check_cmd_args - Check command line arguments
 # ----------------------------------------------------------
 sub check_cmd_args {
-    my ($config_file, $log_file) = @_;
+    my ($config_file) = @_;
 
     if ( !-e $config_file ) {
         my $msg = "$config_file does not exist. Please provide a path to your configuration file: --config\n";
-        logmsg("ERROR", $msg, $log_file, 1);
+        logmsg("ERROR", $msg);
         die $msg;
     }
 }
