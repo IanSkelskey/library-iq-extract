@@ -9,7 +9,7 @@ use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
 
-our @EXPORT_OK = qw(read_config read_cmd_args get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz create_history_table);
+our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz create_history_table);
 
 # ----------------------------------------------------------
 # read_config - Read configuration file
