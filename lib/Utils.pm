@@ -56,7 +56,7 @@ sub check_config {
         # print each one:
         print "Required config: $reqs[$i]\n";
         print "Config value: " . (defined $conf->{ $reqs[$i] } ? $conf->{ $reqs[$i] } : 'undefined') . "\n";
-        push( @missing, $reqs[$i] ) if ( !$conf->{ $reqs[$i] } );
+        push( @missing, $reqs[$i] ) if ( !defined $conf->{ $reqs[$i] } || $conf->{ $reqs[$i] } eq '' );
     }
 
     if ( $#missing > -1 ) {
