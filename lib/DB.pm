@@ -23,7 +23,8 @@ sub get_dbh {
         die "$error_msg\n";
     };
     logmsg("INFO", "Successfully connected to the database: $db_config->{db} at $db_config->{host}:$db_config->{port}");
-    logmsg("DEBUG", "DB Config:\n" . join("\n\t", map { "$_ => $db_config->{$_}" } keys %$db_config));
+    my $masked_db_config = { %$db_config, pass => '****' };
+    logmsg("DEBUG", "DB Config:\n\t" . join("\n\t", map { "$_ => $masked_db_config->{$_}" } keys %$masked_db_config));
     return $dbh;
 }
 
