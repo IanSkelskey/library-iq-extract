@@ -46,6 +46,7 @@ init_logging($log_file, $debug);
 # Check config and CLI values
 check_config($conf);
 check_cmd_args($config_file);
+logmsg("SUCCESS", "Config file and CLI values are valid");
 
 # The rest of the code is commented out
 # ###########################
