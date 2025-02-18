@@ -98,9 +98,14 @@ sub read_cmd_args {
         "no-sftp"            => \$no_sftp,
     );
 
-    check_cmd_args($config_file);
+    my $log_file = 'libraryiq.log';  # Default log file
+    if ($config_file) {
+        my $conf = read_config($config_file);
+        $log_file = $conf->{"logfile"} if $conf->{"logfile"};
+    }
 
-    my $log_file = 'libraryiq.log';
+    check_cmd_args($config_file, $log_file);
+
     logmsg("INFO", "Command line arguments loaded:", $log_file, 1);
     logmsg("INFO", "  config = $config_file", $log_file, 1);
     logmsg("INFO", "  evergreen-config = $evergreen_config_file", $log_file, 1);
@@ -112,13 +117,12 @@ sub read_cmd_args {
     return ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp);
 }
 
+
 # ----------------------------------------------------------
 # check_cmd_args - Check command line arguments
 # ----------------------------------------------------------
 sub check_cmd_args {
-    my ($config_file) = @_;
-
-    my $log_file = 'libraryiq.log';
+    my ($config_file, $log_file) = @_;
 
     if ( !-e $config_file ) {
         my $msg = "$config_file does not exist. Please provide a path to your configuration file: --config\n";
