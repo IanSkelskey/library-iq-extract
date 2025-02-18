@@ -26,6 +26,10 @@ sub read_config {
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
+    print "Configuration read from $file:\n";
+    foreach my $key (keys %c) {
+        print "$key = $c{$key}\n";
+    }
     return \%c;
 }
 
@@ -46,7 +50,7 @@ sub check_config {
     for my $i ( 0 .. $#reqs ) {
         # print each one:
         print "Required config: $reqs[$i]\n";
-        print "Config value: $conf->{ $reqs[$i] }\n";
+        print "Config value: " . (defined $conf->{ $reqs[$i] } ? $conf->{ $reqs[$i] } : 'undefined') . "\n";
         push( @missing, $reqs[$i] ) if ( !$conf->{ $reqs[$i] } );
     }
 
