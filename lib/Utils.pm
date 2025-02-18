@@ -54,24 +54,24 @@ sub check_config {
 
     if ( $#missing > -1 ) {
         my $msg = "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
-        logmsg($msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
         die $msg;
     }
     if ( !-e $conf->{"tempdir"} ) {
         my $msg = "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
-        logmsg($msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
         die $msg;
     }
 
     if ( !-e $conf->{"archive"} ) {
         my $msg = "Archive folder: " . $conf->{"archive"} . " does not exist.\n";
-        logmsg($msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
         die $msg;
     }
 
     if ( lc $conf->{"transfermethod"} ne 'sftp' ) {
         my $msg = "Transfer method: " . $conf->{"transfermethod"} . " is not supported\n";
-        logmsg($msg, $conf->{"logfile"}, 1);
+        logmsg("ERROR", $msg, $conf->{"logfile"}, 1);
         die $msg;
     }
 }

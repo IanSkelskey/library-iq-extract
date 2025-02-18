@@ -57,7 +57,7 @@ my $conf = read_config($config_file);
 check_config($conf);
 
 my $log_file = $conf->{"logfile"} || 'libraryiq.log';
-logmsg("Configuration loaded: ".join(',', map { "$_=$conf->{$_}" } keys %$conf), $log_file, $debug);
+logmsg("INFO", "Configuration loaded: ".join(',', map { "$_=$conf->{$_}" } keys %$conf), $log_file, $debug);
 
 # The rest of the code is commented out
 # ###########################
