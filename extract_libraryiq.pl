@@ -12,7 +12,7 @@ use Getopt::Long;
 # use File::Spec;
 # use XML::Simple;
 
-# use lib 'lib';  # or the path to your local modules
+use lib 'lib';  # or the path to your local modules
 # use DB qw(get_dbh);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
