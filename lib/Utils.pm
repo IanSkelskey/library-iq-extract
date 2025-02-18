@@ -88,6 +88,7 @@ sub check_config {
 # ----------------------------------------------------------
 sub read_cmd_args {
     my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = @_;
+    $evergreen_config_file ||= '/openils/conf/opensrf.xml';  # Default value
 
     GetOptions(
         "config=s"           => \$config_file,
