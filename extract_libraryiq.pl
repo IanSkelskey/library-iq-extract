@@ -15,7 +15,7 @@ use lib 'lib';  # or the path to your local modules
 # use DB qw(get_dbh);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
-use Logging qw(logmsg);
+use Logging qw(init_logging logmsg);
 # use Queries qw(
 #     get_bib_ids_sql
 #     get_bib_detail_sql
@@ -28,16 +28,24 @@ use Logging qw(logmsg);
 #     get_hold_ids_sql
 #     get_hold_detail_sql
 # );
-use Utils qw(read_config read_cmd_args);
+use Utils qw(read_config read_cmd_args check_config check_cmd_args);
 
 ###########################
 # 1) Parse Config & CLI
 ###########################
+# Read command line arguments
 my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = read_cmd_args();
 
 # Read and check configuration file
-# The logger is initialized during this step with the log file and debug flag
 my $conf = read_config($config_file);
+
+# Initialize logging
+my $log_file = $conf->{logfile};
+init_logging($log_file, $debug);
+
+# Check config and CLI values
+check_config($conf);
+check_cmd_args($config_file);
 
 # The rest of the code is commented out
 # ###########################

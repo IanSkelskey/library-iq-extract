@@ -5,7 +5,7 @@ use warnings;
 use Exporter 'import';
 use File::Spec;
 use DB qw(chunked_ids fetch_data_by_ids);
-use Logging qw(logmsg init_logging);
+use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
 
@@ -32,12 +32,6 @@ sub read_config {
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
-    check_config(\%c);
-    init_logging($c{"logfile"}, 0);
-    logmsg("INFO", "Configuration loaded:");
-    foreach my $key (keys %c) {
-        logmsg("INFO", "  $key = $c{$key}");
-    }
     return \%c;
 }
 
@@ -98,25 +92,6 @@ sub read_cmd_args {
         "no-email"           => \$no_email,
         "no-sftp"            => \$no_sftp,
     );
-
-    my $log_file = 'libraryiq.log';  # Default log file
-    if ($config_file) {
-        my $conf = read_config($config_file);
-        $log_file = $conf->{"logfile"} if $conf->{"logfile"};
-    }
-
-    # Initialize logging
-    init_logging($log_file, $debug);
-
-    check_cmd_args($config_file);
-
-    logmsg("INFO", "Command line arguments loaded:");
-    logmsg("INFO", "  config = $config_file");
-    logmsg("INFO", "  evergreen-config = $evergreen_config_file");
-    logmsg("INFO", "  debug = " . ($debug ? "true" : "false"));
-    logmsg("INFO", "  full = " . ($full ? "true" : "false"));
-    logmsg("INFO", "  no-email = " . ($no_email ? "true" : "false"));
-    logmsg("INFO", "  no-sftp = " . ($no_sftp ? "true" : "false"));
 
     return ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp);
 }
