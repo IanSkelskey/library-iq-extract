@@ -5,6 +5,7 @@ use warnings;
 use DBI;
 use Exporter 'import';
 use Logging qw(logmsg);
+use XML::Simple;
 
 our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config);
 
