@@ -29,7 +29,7 @@ use Logging qw(logmsg);
 #     get_hold_ids_sql
 #     get_hold_detail_sql
 # );
-use Utils qw(read_config check_config check_cmd_args);
+use Utils qw(read_config read_cmd_args);
 
 ###########################
 # 1) Parse Config & CLI
