@@ -31,10 +31,6 @@ sub read_config {
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
-    print "Configuration read from $file:\n";
-    foreach my $key (keys %c) {
-        print "$key = $c{$key}\n";
-    }
     return \%c;
 }
 
@@ -43,11 +39,6 @@ sub read_config {
 # ----------------------------------------------------------
 sub check_config {
     my ($conf) = @_;
-
-    print "check_config received configuration:\n";
-    foreach my $key (keys %$conf) {
-        print "$key = $conf->{$key}\n";
-    }
 
     my @reqs = (
         "logfile", "tempdir", "libraryname", "ftplogin",
@@ -58,25 +49,30 @@ sub check_config {
     my @missing = ();
     
     for my $i ( 0 .. $#reqs ) {
-        # print each one:
-        print "Required config: $reqs[$i]\n";
-        print "Config value: " . (defined $conf->{ $reqs[$i] } ? $conf->{ $reqs[$i] } : 'undefined') . "\n";
         push( @missing, $reqs[$i] ) if ( !defined $conf->{ $reqs[$i] } || $conf->{ $reqs[$i] } eq '' );
     }
 
     if ( $#missing > -1 ) {
-        die "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
+        my $msg = "Please specify the required configuration options:\n" . join("\n", @missing) . "\n";
+        logmsg($msg, $conf->{"logfile"}, 1);
+        die $msg;
     }
     if ( !-e $conf->{"tempdir"} ) {
-        die "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
+        my $msg = "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
+        logmsg($msg, $conf->{"logfile"}, 1);
+        die $msg;
     }
 
     if ( !-e $conf->{"archive"} ) {
-        die "Archive folder: " . $conf->{"archive"} . " does not exist.\n";
+        my $msg = "Archive folder: " . $conf->{"archive"} . " does not exist.\n";
+        logmsg($msg, $conf->{"logfile"}, 1);
+        die $msg;
     }
 
     if ( lc $conf->{"transfermethod"} ne 'sftp' ) {
-        die "Transfer method: " . $conf->{"transfermethod"} . " is not supported\n";
+        my $msg = "Transfer method: " . $conf->{"transfermethod"} . " is not supported\n";
+        logmsg($msg, $conf->{"logfile"}, 1);
+        die $msg;
     }
 }
 
