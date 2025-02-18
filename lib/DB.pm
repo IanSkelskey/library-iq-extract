@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use DBI;
 use Exporter 'import';
+use Logging qw(logmsg);
 
 our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids);
 
@@ -15,7 +16,13 @@ sub get_dbh {
     my $dsn = "dbi:Pg:dbname=$db_config->{db};host=$db_config->{host};port=$db_config->{port}";
     my $dbh = DBI->connect($dsn, $db_config->{user}, $db_config->{pass},
         { RaiseError => 1, AutoCommit => 1, pg_enable_utf8 => 1 }
-    ) or die "DBI connect error: $DBI::errstr\n";
+    ) or do {
+        my $error_msg = "DBI connect error: $DBI::errstr";
+        logmsg("ERROR", $error_msg);
+        die "$error_msg\n";
+    };
+    logmsg("INFO", "Successfully connected to the database: $db_config->{db} at $db_config->{host}:$db_config->{port}");
+    logmsg("DEBUG", "DB Config:\n" . join("\n\t", map { "$_ => $db_config->{$_}" } keys %$db_config));
     return $dbh;
 }
 

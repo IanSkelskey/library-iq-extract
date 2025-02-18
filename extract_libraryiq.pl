@@ -12,7 +12,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-# use DB qw(get_dbh);
+use DB qw(get_dbh);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
 use Logging qw(init_logging logmsg);
@@ -48,13 +48,12 @@ check_config($conf);
 check_cmd_args($config_file);
 logmsg("SUCCESS", "Config file and CLI values are valid");
 
-# The rest of the code is commented out
-# ###########################
-# # 2) DB Connection
-# ###########################
-# my $db_config = get_db_config($evergreen_config_file);
-# my $dbh = get_dbh($db_config);
-# logmsg("Connected to DB", $log_file, $debug);
+###########################
+# 2) DB Connection
+###########################
+my $db_config = get_db_config($evergreen_config_file);
+my $dbh = get_dbh($db_config);
+logmsg("SUCCESS", "Connected to DB");
 
 # ###########################
 # # 3) Ensure History Table Exists
