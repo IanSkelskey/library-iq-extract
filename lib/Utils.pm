@@ -31,6 +31,12 @@ sub read_config {
         $c{$k} = $v if defined $k and defined $v;
     }
     close $fh;
+    check_config(\%c);
+    my $log_file = $c{"logfile"} || 'libraryiq.log';
+    logmsg("INFO", "Configuration loaded:", $log_file, 1);
+    foreach my $key (keys %c) {
+        logmsg("INFO", "  $key = $c{$key}", $log_file, 1);
+    }
     return \%c;
 }
 
@@ -77,13 +83,46 @@ sub check_config {
 }
 
 # ----------------------------------------------------------
+# read_cmd_args - Read and validate command line arguments
+# ----------------------------------------------------------
+sub read_cmd_args {
+    my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = @_;
+
+    GetOptions(
+        "config=s"           => \$config_file,
+        "evergreen-config=s" => \$evergreen_config_file,
+        "debug"              => \$debug,
+        "full"               => \$full,
+        "no-email"           => \$no_email,
+        "no-sftp"            => \$no_sftp,
+    );
+
+    check_cmd_args($config_file);
+
+    my $log_file = 'libraryiq.log';
+    logmsg("INFO", "Command line arguments loaded:", $log_file, 1);
+    logmsg("INFO", "  config = $config_file", $log_file, 1);
+    logmsg("INFO", "  evergreen-config = $evergreen_config_file", $log_file, 1);
+    logmsg("INFO", "  debug = " . ($debug ? "true" : "false"), $log_file, 1);
+    logmsg("INFO", "  full = " . ($full ? "true" : "false"), $log_file, 1);
+    logmsg("INFO", "  no-email = " . ($no_email ? "true" : "false"), $log_file, 1);
+    logmsg("INFO", "  no-sftp = " . ($no_sftp ? "true" : "false"), $log_file, 1);
+
+    return ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp);
+}
+
+# ----------------------------------------------------------
 # check_cmd_args - Check command line arguments
 # ----------------------------------------------------------
 sub check_cmd_args {
     my ($config_file) = @_;
 
+    my $log_file = 'libraryiq.log';
+
     if ( !-e $config_file ) {
-        die "$config_file does not exist. Please provide a path to your configuration file: --config\n";
+        my $msg = "$config_file does not exist. Please provide a path to your configuration file: --config\n";
+        logmsg("ERROR", $msg, $log_file, 1);
+        die $msg;
     }
 }
 
