@@ -6,7 +6,7 @@ use DBI;
 use Exporter 'import';
 use Logging qw(logmsg);
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -24,6 +24,22 @@ sub get_dbh {
     logmsg("INFO", "Successfully connected to the database: $db_config->{db} at $db_config->{host}:$db_config->{port}");
     logmsg("DEBUG", "DB Config:\n" . join("\n\t", map { "$_ => $db_config->{$_}" } keys %$db_config));
     return $dbh;
+}
+
+# ----------------------------------------------------------
+# get_db_config - Get database configuration from Evergreen config file
+# ----------------------------------------------------------
+sub get_db_config {
+    my ($evergreen_config_file) = @_;
+    my $xml = XML::Simple->new;
+    my $data = $xml->XMLin($evergreen_config_file);
+    return {
+        db   => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{db},
+        host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{host},
+        port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{port},
+        user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{user},
+        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{pw},
+    };
 }
 
 # ----------------------------------------------------------
