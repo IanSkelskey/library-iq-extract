@@ -1,2 +1,4 @@
 *.conf
+*.log
+*.tar.gz
 /examples/

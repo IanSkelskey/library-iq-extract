@@ -5,9 +5,10 @@ use warnings;
 use DBI;
 use Exporter 'import';
 use Logging qw(logmsg);
+use Utils qw(dedupe_array);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time dedupe_array);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time process_data_type);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -204,20 +205,26 @@ sub set_last_run_time {
 }
 
 # ----------------------------------------------------------
-# dedupe_array - Remove duplicates from an array
+# process_data_type - Process data type and write to file
 # ----------------------------------------------------------
-sub dedupe_array {
-    my ($arrRef) = @_;
-    my @arr     = $arrRef ? @{$arrRef} : ();
-    my %deduper = ();
-    $deduper{$_} = 1 foreach (@arr);
-    my @ret = ();
-    while ( ( my $key, my $val ) = each(%deduper) ) {
-        push( @ret, $key );
-    }
-    @ret = sort @ret;
-    return \@ret;
-}
+sub process_data_type {
+    my ($type, $id_sql, $detail_sql, $columns, $dbh, $date_filter, $chunk_size, $tempdir, $log_file, $debug) = @_;
+    my @chunks = chunked_ids($dbh, $id_sql, $date_filter, $chunk_size);
+    logmsg("Found ".(scalar @chunks)." $type ID chunks", $log_file, $debug);
 
+    my $out_file = File::Spec->catfile($tempdir, "$type.tsv");
+    open my $OUT, '>', $out_file or die "Cannot open $out_file: $!";
+    print $OUT join("\t", @$columns)."\n";
+
+    foreach my $chunk (@chunks) {
+        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
+        foreach my $r (@rows) {
+            print $OUT join("\t", map { $_ // '' } @$r), "\n";
+        }
+    }
+    close $OUT;
+    logmsg("Wrote $type data to $out_file", $log_file, $debug);
+    return $out_file;
+}
 
 1;

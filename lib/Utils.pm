@@ -4,12 +4,11 @@ use strict;
 use warnings;
 use Exporter 'import';
 use File::Spec;
-use DBUtils qw(chunked_ids fetch_data_by_ids);
 use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
 
-our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args process_data_type create_tar_gz);
+our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args create_tar_gz dedupe_array);
 
 # ----------------------------------------------------------
 # read_config - Read configuration file
@@ -111,29 +110,6 @@ sub check_cmd_args {
 }
 
 # ----------------------------------------------------------
-# process_data_type - Process data type and write to file
-# ----------------------------------------------------------
-sub process_data_type {
-    my ($type, $id_sql, $detail_sql, $columns, $dbh, $date_filter, $chunk_size, $tempdir, $log_file, $debug) = @_;
-    my @chunks = chunked_ids($dbh, $id_sql, $date_filter, $chunk_size);
-    logmsg("Found ".(scalar @chunks)." $type ID chunks", $log_file, $debug);
-
-    my $out_file = File::Spec->catfile($tempdir, "$type.tsv");
-    open my $OUT, '>', $out_file or die "Cannot open $out_file: $!";
-    print $OUT join("\t", @$columns)."\n";
-
-    foreach my $chunk (@chunks) {
-        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
-        foreach my $r (@rows) {
-            print $OUT join("\t", map { $_ // '' } @$r), "\n";
-        }
-    }
-    close $OUT;
-    logmsg("Wrote $type data to $out_file", $log_file, $debug);
-    return $out_file;
-}
-
-# ----------------------------------------------------------
 # create_tar_gz - Create a tar.gz archive of the given files
 # ----------------------------------------------------------
 sub create_tar_gz {
@@ -149,6 +125,22 @@ sub create_tar_gz {
 
     logmsg("Created tar.gz archive $tar_file", $log_file, $debug);
     return $tar_file;
+}
+
+# ----------------------------------------------------------
+# dedupe_array - Remove duplicates from an array
+# ----------------------------------------------------------
+sub dedupe_array {
+    my ($arrRef) = @_;
+    my @arr     = $arrRef ? @{$arrRef} : ();
+    my %deduper = ();
+    $deduper{$_} = 1 foreach (@arr);
+    my @ret = ();
+    while ( ( my $key, my $val ) = each(%deduper) ) {
+        push( @ret, $key );
+    }
+    @ret = sort @ret;
+    return \@ret;
 }
 
 1;
