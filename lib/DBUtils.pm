@@ -1,4 +1,4 @@
-package DB;
+package DBUtils;
 
 use strict;
 use warnings;
