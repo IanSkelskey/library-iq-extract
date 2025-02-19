@@ -15,7 +15,7 @@ use lib 'lib';  # or the path to your local modules
 use DBUtils qw(get_dbh get_db_config create_history_table get_org_units);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
-use Logging qw(init_logging logmsg);
+use Logging qw(init_logging logmsg logheader);
 # use Queries qw(
 #     get_bib_ids_sql
 #     get_bib_detail_sql
@@ -75,7 +75,7 @@ logmsg("INFO", "Organization units: $pgLibs");
 ###########################
 my $last_run_time = get_last_run_time($dbh, $conf, \&logmsg);
 my $run_date_filter = $full ? undef : $last_run_time;
-logmsg("INFO", "============== Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time") . " ==============");
+logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 
 # ###########################
 # # 6) For each data type, we:
@@ -192,6 +192,6 @@ logmsg("INFO", "============== Run mode: " . ($full ? "FULL" : "INCREMENTAL from
 #     );
 # }
 
-logmsg("INFO", "============== Finished Library IQ Extract ==============");
+logheader("Finished Library IQ Extract");
 
 exit 0;
