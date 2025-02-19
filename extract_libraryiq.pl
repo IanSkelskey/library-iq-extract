@@ -21,13 +21,13 @@ use Queries qw(
 	get_bib_detail_sql
     get_item_ids_sql
     get_item_detail_sql
+	get_circ_ids_sql
+	get_circ_detail_sql
+	get_patron_ids_sql
+	get_patron_detail_sql
+	get_hold_ids_sql
+	get_hold_detail_sql
 	);
-#     get_circ_ids_sql
-#     get_circ_detail_sql
-#     get_patron_ids_sql
-#     get_patron_detail_sql
-#     get_hold_ids_sql
-#     get_hold_detail_sql
 
 use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to_file);
 
@@ -117,47 +117,53 @@ my $item_out_file = write_data_to_file(
 	$conf->{tempdir}
 );
 
-# # Process Circs
-# my $circ_out_file = process_data_type(
-#     'circs',
-#     get_circ_ids_sql($full, $pgLibs),
-#     get_circ_detail_sql(),
-#     [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_date/],
-#     $dbh,
-#     $run_date_filter,
-#     $conf->{chunksize},
-#     $conf->{tempdir},
-#     $log_file,
-#     $debug
-# );
+# Process Circs
+my @circ_data = get_data(
+	get_circ_ids_sql($full, $pgLibs),
+	get_circ_detail_sql(),
+	$dbh,
+	$run_date_filter,
+	$conf->{chunksize}
+);
 
-# # Process Patrons
-# my $patron_out_file = process_data_type(
-#     'patrons',
-#     get_patron_ids_sql($full, $pgLibs),
-#     get_patron_detail_sql(),
-#     [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/],
-#     $dbh,
-#     $run_date_filter,
-#     $conf->{chunksize},
-#     $conf->{tempdir},
-#     $log_file,
-#     $debug
-# );
+my $circ_out_file = write_data_to_file(
+	'circs',
+	\@circ_data,
+	[qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_date/],
+	$conf->{tempdir}
+);
 
-# # Process Holds
-# my $hold_out_file = process_data_type(
-#     'holds',
-#     get_hold_ids_sql($full, $pgLibs),
-#     get_hold_detail_sql(),
-#     [qw/bibrecordid pickup_lib shortname/],
-#     $dbh,
-#     $run_date_filter,
-#     $conf->{chunksize},
-#     $conf->{tempdir},
-#     $log_file,
-#     $debug
-# );
+# Process Patrons
+my @patron_data = get_data(
+	get_patron_ids_sql($full, $pgLibs),
+	get_patron_detail_sql(),
+	$dbh,
+	$run_date_filter,
+	$conf->{chunksize}
+);
+
+my $patron_out_file = write_data_to_file(
+	'patrons',
+	\@patron_data,
+	[qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/],
+	$conf->{tempdir}
+);
+
+# Process Holds
+my @hold_data = get_data(
+	get_hold_ids_sql($full, $pgLibs),
+	get_hold_detail_sql(),
+	$dbh,
+	$run_date_filter,
+	$conf->{chunksize}
+);
+
+my $hold_out_file = write_data_to_file(
+	'holds',
+	\@hold_data,
+	[qw/bibrecordid pickup_lib shortname/],
+	$conf->{tempdir}
+);
 
 # ###########################
 # # 7) Create tar.gz archive
