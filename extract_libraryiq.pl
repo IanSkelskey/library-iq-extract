@@ -201,6 +201,10 @@ unless ($no_email) {
 		"LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
 		"LibraryIQ Extract has completed."
 	);
+	logmsg("INFO", "Email sent to: ".join(',', @recipients)
+		." from: ".$conf->{fromemail}
+		." with subject: LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL")
+		." and body: LibraryIQ Extract has completed.");
 }
 
 logheader("Finished Library IQ Extract");
