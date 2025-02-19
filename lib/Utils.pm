@@ -7,6 +7,7 @@ use Encode;
 use File::Spec;
 use Logging qw(logmsg);
 use Archive::Tar;
+use DateTime;
 use Getopt::Long;
 
 our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args create_tar_gz dedupe_array write_data_to_file);
