@@ -12,7 +12,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DBUtils qw(get_dbh get_db_config create_history_table get_org_units);
+use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
@@ -28,7 +28,7 @@ use Logging qw(init_logging logmsg logheader);
 #     get_hold_ids_sql
 #     get_hold_detail_sql
 # );
-use Utils qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time);
+use Utils qw(read_config read_cmd_args check_config check_cmd_args);
 
 ###########################
 # 1) Parse Config & CLI

@@ -20,7 +20,7 @@ This software extracts data from an Evergreen server and securely transfers the 
 📁 config/
     └── ⚙️ library_config.conf.example
 📁 lib/
-    ├── 🐪 DB.pm
+    ├── 🐪 DBUtils.pm
     ├── 🐪 Email.pm
     ├── 🐪 Logging.pm
     ├── 🐪 Queries.pm
