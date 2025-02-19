@@ -130,7 +130,7 @@ sub write_data_to_file {
 
     # Write each row of data to the output file
     foreach my $r (@$data) {
-        print $OUT join("\t", map { $_ // '' } @$r), "\n";
+        print $OUT Encode::encode('UTF-8', join("\t", map { $_ // '' } @$r) . "\n");
     }
 
     # Close the output file
