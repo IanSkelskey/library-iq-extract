@@ -8,7 +8,7 @@ use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
 
-our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args create_tar_gz dedupe_array);
+our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args create_tar_gz dedupe_array write_data_to_file);
 
 # ----------------------------------------------------------
 # read_config - Read configuration file
@@ -107,6 +107,39 @@ sub check_cmd_args {
         logmsg("ERROR", $msg);
         die $msg;
     }
+}
+
+# ----------------------------------------------------------
+# write_data_to_file - Write data to a file
+# ----------------------------------------------------------
+sub write_data_to_file {
+    my ($type, $data, $columns, $tempdir) = @_;
+
+    # Define the output file path
+    my $out_file = File::Spec->catfile($tempdir, "$type.tsv");
+
+    # Open the output file for writing
+    my $error = "Cannot open $out_file: $!";
+    open my $OUT, '>', $out_file or do {
+        logmsg("ERROR", $error);
+        die $error;
+    };
+
+    # Write the column headers to the output file
+    print $OUT join("\t", @$columns)."\n";
+
+    # Write each row of data to the output file
+    foreach my $r (@$data) {
+        print $OUT join("\t", map { $_ // '' } @$r), "\n";
+    }
+
+    # Close the output file
+    close $OUT;
+
+    # Log the completion of the data writing process
+    logmsg("INFO", "Wrote $type data to $out_file");
+
+    return $out_file;
 }
 
 # ----------------------------------------------------------

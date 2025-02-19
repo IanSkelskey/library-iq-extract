@@ -12,13 +12,14 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time);
+use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time get_data);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
-# use Queries qw(
-#     get_bib_ids_sql
-#     get_bib_detail_sql
+use Queries qw(
+	get_bib_ids_sql
+	get_bib_detail_sql
+	);
 #     get_item_ids_sql
 #     get_item_detail_sql
 #     get_circ_ids_sql
@@ -27,8 +28,8 @@ use Logging qw(init_logging logmsg logheader);
 #     get_patron_detail_sql
 #     get_hold_ids_sql
 #     get_hold_detail_sql
-# );
-use Utils qw(read_config read_cmd_args check_config check_cmd_args);
+
+use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to_file);
 
 ###########################
 # 1) Parse Config & CLI
@@ -77,26 +78,28 @@ my $last_run_time = get_last_run_time($dbh, $conf, \&logmsg);
 my $run_date_filter = $full ? undef : $last_run_time;
 logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 
-# ###########################
-# # 6) For each data type, we:
-# #   a) get IDs in chunks
-# #   b) for each chunk, fetch details
-# #   c) write data to a file
-# ###########################
+###########################
+# 6) For each data type, we:
+#   a) get IDs in chunks
+#   b) for each chunk, fetch details
+#   c) write data to a file
+###########################
 
-# # Process BIBs
-# my $bib_out_file = process_data_type(
-#     'bibs',
-#     get_bib_ids_sql($full, $pgLibs),
-#     get_bib_detail_sql(),
-#     [qw/id isbn upc mat_type pubdate publisher title author/],
-#     $dbh,
-#     $run_date_filter,
-#     $conf->{chunksize},
-#     $conf->{tempdir},
-#     $log_file,
-#     $debug
-# );
+# Process BIBs
+my @bib_data = get_data(
+	get_bib_ids_sql($full, $pgLibs),
+	get_bib_detail_sql(),
+	$dbh,
+	$run_date_filter,
+	$conf->{chunksize}
+);
+
+my $bib_out_file = write_data_to_file(
+	'bibs',
+	\@bib_data,
+	[qw/id isbn upc mat_type pubdate publisher title author/],
+	$conf->{tempdir}
+);
 
 # # Process Items
 # my $item_out_file = process_data_type(

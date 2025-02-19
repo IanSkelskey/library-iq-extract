@@ -209,22 +209,35 @@ sub set_last_run_time {
 # ----------------------------------------------------------
 sub process_data_type {
     my ($type, $id_sql, $detail_sql, $columns, $dbh, $date_filter, $chunk_size, $tempdir, $log_file, $debug) = @_;
-    my @chunks = chunked_ids($dbh, $id_sql, $date_filter, $chunk_size);
-    logmsg("Found ".(scalar @chunks)." $type ID chunks", $log_file, $debug);
 
-    my $out_file = File::Spec->catfile($tempdir, "$type.tsv");
-    open my $OUT, '>', $out_file or die "Cannot open $out_file: $!";
-    print $OUT join("\t", @$columns)."\n";
+    # Get data based on the provided SQL query and date filter
+    my @data = get_data($id_sql, $detail_sql, $dbh, $date_filter, $chunk_size, $log_file, $debug);
 
-    foreach my $chunk (@chunks) {
-        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
-        foreach my $r (@rows) {
-            print $OUT join("\t", map { $_ // '' } @$r), "\n";
-        }
-    }
-    close $OUT;
-    logmsg("Wrote $type data to $out_file", $log_file, $debug);
+    # Write data to file
+    my $out_file = write_data_to_file($type, \@data, $columns, $tempdir, $log_file, $debug);
+
     return $out_file;
+}
+
+# ----------------------------------------------------------
+# get_data - Get data based on ID and detail SQL queries
+# ----------------------------------------------------------
+sub get_data {
+    my ($id_sql, $detail_sql, $dbh, $date_filter, $chunk_size) = @_;
+
+    # Get chunks of IDs based on the provided SQL query and date filter
+    my @chunks = chunked_ids($dbh, $id_sql, $date_filter, $chunk_size);
+    logmsg("INFO", "Found ".(scalar @chunks)." ID chunks");
+
+    my @data;
+    # Process each chunk of IDs
+    foreach my $chunk (@chunks) {
+        # Fetch data for the current chunk of IDs
+        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
+        push @data, @rows;
+    }
+
+    return @data;
 }
 
 1;
