@@ -24,11 +24,10 @@ sub init_logging {
 # ----------------------------------------------------------
 sub logmsg {
     my ($level, $msg) = @_;
-    open my $LOG, '>>', $log_file or die "Cannot open $log_file: $!";
-    my $ts = strftime('%Y-%m-%d %H:%M:%S', localtime);
-    print $LOG "[$ts] [$level] $msg\n";
-    print "[$ts] [$level] $msg\n" if $debug;  # also echo to stdout if debug
-    close $LOG;
+    my $ts = _get_timestamp();
+    my $log_entry = "[$ts] [$level] $msg\n";
+    _write_log($log_entry);
+    print $log_entry if $debug;  # also echo to stdout if debug
 }
 
 # ----------------------------------------------------------
@@ -41,23 +40,39 @@ sub logheader {
     my $padding = ' ' x (($width - length($header) - 2) / 2);
     my $formatted_header = "*$padding$header$padding*";
     $formatted_header .= ' ' if length($formatted_header) < $width;
-    
-    my $ts = strftime('%Y-%m-%d %H:%M:%S', localtime);
-    my $timestamp = "[$ts]";
 
-    open my $LOG, '>>', $log_file or die "Cannot open $log_file: $!";
-    print $LOG "$timestamp\n";
-    print $LOG "$border\n";
-    print $LOG "$formatted_header\n";
-    print $LOG "$border\n";
-    close $LOG;
+    my $ts = _get_timestamp();
+    my $timestamp = "[$ts]";
+    my $timestamp_padding = ' ' x (($width - length($timestamp)) / 2);
+    my $formatted_timestamp = "$timestamp_padding$timestamp$timestamp_padding";
+    $formatted_timestamp .= ' ' if length($formatted_timestamp) < $width;
+
+    my $log_entry = "$border\n$formatted_header\n$formatted_timestamp\n$border\n";
+    _write_log($log_entry);
 
     if ($debug) {
-        print "$timestamp\n";
         print "$border\n";
         print "$formatted_header\n";
+        print "$formatted_timestamp\n";
         print "$border\n";
     }
+}
+
+# ----------------------------------------------------------
+# _get_timestamp - Get the current timestamp
+# ----------------------------------------------------------
+sub _get_timestamp {
+    return strftime('%Y-%m-%d %H:%M:%S', localtime);
+}
+
+# ----------------------------------------------------------
+# _write_log - Write a log entry to the log file
+# ----------------------------------------------------------
+sub _write_log {
+    my ($log_entry) = @_;
+    open my $LOG, '>>', $log_file or die "Cannot open $log_file: $!";
+    print $LOG $log_entry;
+    close $LOG;
 }
 
 1;
