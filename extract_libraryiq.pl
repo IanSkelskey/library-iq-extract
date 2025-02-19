@@ -66,7 +66,7 @@ create_history_table($dbh, $log_file, $debug);
 my $librarynames = $conf->{librarynames};
 logmsg("INFO", "Library names: $librarynames");
 my $include_descendants = exists $conf->{include_org_descendants};
-my $org_units = get_org_units($dbh, $libraryname, $include_descendants, sub { logmsg("INFO", $_[0]) });
+my $org_units = get_org_units($dbh, $librarynames, $include_descendants, sub { logmsg("INFO", $_[0]) });
 my $pgLibs = join(',', @$org_units);
 logmsg("INFO", "Organization units: " . join(', ', @$org_units));
 
