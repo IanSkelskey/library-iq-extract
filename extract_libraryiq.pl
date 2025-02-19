@@ -47,6 +47,11 @@ init_logging($log_file, $debug);
 check_config($conf);
 check_cmd_args($config_file);
 logmsg("SUCCESS", "Config file and CLI values are valid");
+if ($full) {
+    logmsg("INFO", "============== Starting Full Library IQ Extract ==============");
+} else {
+    logmsg("INFO", "============== Starting Diff Library IQ Extract ==============");
+}
 
 ###########################
 # 2) DB Connection
@@ -192,4 +197,6 @@ logmsg("INFO", "Organization units: $pgLibs");
 #     );
 # }
 
-# exit 0;
+logmsg("INFO", "============== Finished Library IQ Extract ==============");
+
+exit 0;
