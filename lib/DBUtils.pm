@@ -7,7 +7,7 @@ use Exporter 'import';
 use Logging qw(logmsg);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time dedupe_array);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -162,6 +162,45 @@ sub get_org_descendants {
     }
 
     return \@ret;
+}
+
+# ----------------------------------------------------------
+# get_last_run_time - Get the last run time from the database
+# ----------------------------------------------------------
+sub get_last_run_time {
+    my ($dbh, $c, $log) = @_;
+    # You can store last run in a dedicated table, or read from a file, etc.
+    my $sql = "SELECT last_run FROM libraryiq.history WHERE key=? LIMIT 1";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute($c->{libraryname});
+    if (my ($ts) = $sth->fetchrow_array) {
+        $sth->finish;
+        return $ts; # e.g. '2025-01-01'
+    } else {
+        $sth->finish;
+        $log->("No existing entry. Using old date -> 1900-01-01");
+        return '1900-01-01';
+    }
+}
+
+# ----------------------------------------------------------
+# set_last_run_time - Set the last run time in the database
+# ----------------------------------------------------------
+sub set_last_run_time {
+    my ($dbh, $c, $log) = @_;
+    my $sql_upd = q{
+      UPDATE libraryiq.history SET last_run=now() WHERE key=?
+    };
+    my $sth_upd = $dbh->prepare($sql_upd);
+    my $rows = $sth_upd->execute($c->{libraryname});
+    if ($rows == 0) {
+      # Might need an INSERT if row does not exist
+      my $sql_ins = q{
+        INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
+      };
+      $dbh->do($sql_ins, undef, $c->{libraryname});
+    }
+    $log->("Updated last_run time for key=$c->{libraryname}");
 }
 
 # ----------------------------------------------------------

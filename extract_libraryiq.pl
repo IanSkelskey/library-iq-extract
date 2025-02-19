@@ -28,7 +28,7 @@ use Logging qw(init_logging logmsg);
 #     get_hold_ids_sql
 #     get_hold_detail_sql
 # );
-use Utils qw(read_config read_cmd_args check_config check_cmd_args);
+use Utils qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time);
 
 ###########################
 # 1) Parse Config & CLI
@@ -47,11 +47,6 @@ init_logging($log_file, $debug);
 check_config($conf);
 check_cmd_args($config_file);
 logmsg("SUCCESS", "Config file and CLI values are valid");
-if ($full) {
-    logmsg("INFO", "============== Starting Full Library IQ Extract ==============");
-} else {
-    logmsg("INFO", "============== Starting Diff Library IQ Extract ==============");
-}
 
 ###########################
 # 2) DB Connection
@@ -75,12 +70,12 @@ my $org_units = get_org_units($dbh, $librarynames, $include_descendants, sub { l
 my $pgLibs = join(',', @$org_units);
 logmsg("INFO", "Organization units: $pgLibs");
 
-# ###########################
-# # 5) Figure out last run vs full
-# ###########################
-# my $last_run_time = get_last_run_time($dbh, $conf, \&logmsg);
-# my $run_date_filter = $full ? undef : $last_run_time;
-# logmsg("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"), $log_file, $debug);
+###########################
+# 5) Figure out last run vs full
+###########################
+my $last_run_time = get_last_run_time($dbh, $conf, \&logmsg);
+my $run_date_filter = $full ? undef : $last_run_time;
+logmsg("INFO", "============== Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time") . " ==============");
 
 # ###########################
 # # 6) For each data type, we:
