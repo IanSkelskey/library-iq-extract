@@ -19,9 +19,9 @@ use Logging qw(init_logging logmsg logheader);
 use Queries qw(
 	get_bib_ids_sql
 	get_bib_detail_sql
+    get_item_ids_sql
+    get_item_detail_sql
 	);
-#     get_item_ids_sql
-#     get_item_detail_sql
 #     get_circ_ids_sql
 #     get_circ_detail_sql
 #     get_patron_ids_sql
