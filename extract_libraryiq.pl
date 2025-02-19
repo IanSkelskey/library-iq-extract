@@ -34,6 +34,9 @@ use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to
 ###########################
 # 1) Parse Config & CLI
 ###########################
+
+logheader("Reading Configuration and CLI Arguments");
+
 # Read command line arguments
 my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = read_cmd_args();
 
