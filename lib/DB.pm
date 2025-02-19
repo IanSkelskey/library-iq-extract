@@ -109,7 +109,7 @@ sub create_history_table {
         )
     };
     $dbh->do($sql);
-    logmsg("Ensured libraryiq.history table exists", $log_file, $debug);
+    logmsg("INFO", "Ensured libraryiq.history table exists");
 }
 
 1;
