@@ -5,9 +5,10 @@ use warnings;
 use DBI;
 use Exporter 'import';
 use Logging qw(logmsg);
+use Utils qw(dedupe_array);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -110,6 +111,58 @@ sub create_history_table {
     };
     $dbh->do($sql);
     logmsg("INFO", "Ensured libraryiq.history table exists");
+}
+
+# ----------------------------------------------------------
+# get_org_units - Get organization units based on library shortnames
+# ----------------------------------------------------------
+sub get_org_units {
+    my ($dbh, $librarynames, $include_descendants, $log) = @_;
+    my @ret = ();
+
+    # spaces don't belong here
+    $librarynames =~ s/\s//g;
+
+    my @sp = split( /,/, $librarynames );
+
+    my $libs = join( '$$,$$', @sp );
+    $libs = '$$' . $libs . '$$';
+
+    my $query = "
+    select id
+    from
+    actor.org_unit
+    where lower(shortname) in ($libs)
+    order by 1";
+    $log->($query) if $log;
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    while (my @row = $sth->fetchrow_array) {
+        push( @ret, $row[0] );
+        if ($include_descendants) {
+            my @des = @{ get_org_descendants($dbh, $row[0], $log) };
+            push( @ret, @des );
+        }
+    }
+    return dedupe_array(\@ret);
+}
+
+# ----------------------------------------------------------
+# get_org_descendants - Get organization unit descendants
+# ----------------------------------------------------------
+sub get_org_descendants {
+    my ($dbh, $thisOrg, $log) = @_;
+    my $query   = "select id from actor.org_unit_descendants($thisOrg)";
+    my @ret     = ();
+    $log->($query) if $log;
+
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    while (my $row = $sth->fetchrow_array) {
+        push( @ret, $row );
+    }
+
+    return \@ret;
 }
 
 1;

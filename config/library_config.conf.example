@@ -7,7 +7,7 @@ archive = /path/to/archive
 # This is how the query gets only data for that system/branch
 # comma separated list of branch/system shortnames, case insensitive
 
-libraryname = BR1, BR2, BR3, BR4
+librarynames = BR1, BR2, BR3, BR4
 
 # Include descendants?
 # any value here is considered "yes"

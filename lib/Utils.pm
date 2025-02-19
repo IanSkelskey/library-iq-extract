@@ -9,7 +9,7 @@ use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
 
-our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time set_last_run_time process_data_type get_db_config get_org_units create_tar_gz);
+our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time set_last_run_time process_data_type get_db_config create_tar_gz dedupe_array);
 
 # ----------------------------------------------------------
 # read_config - Read configuration file
@@ -42,7 +42,7 @@ sub check_config {
     my ($conf) = @_;
 
     my @reqs = (
-        "logfile", "tempdir", "libraryname", "ftplogin",
+        "logfile", "tempdir", "librarynames", "ftplogin",
         "ftppass", "ftphost", "remote_directory", "emailsubjectline",
         "archive", "transfermethod"
     );
@@ -170,58 +170,6 @@ sub process_data_type {
     close $OUT;
     logmsg("Wrote $type data to $out_file", $log_file, $debug);
     return $out_file;
-}
-
-# ----------------------------------------------------------
-# get_org_units - Get organization units based on library shortnames
-# ----------------------------------------------------------
-sub get_org_units {
-    my ($dbh, $libraryname, $include_descendants, $log) = @_;
-    my @ret = ();
-
-    # spaces don't belong here
-    $libraryname =~ s/\s//g;
-
-    my @sp = split( /,/, $libraryname );
-
-    my $libs = join( '$$,$$', @sp );
-    $libs = '$$' . $libs . '$$';
-
-    my $query = "
-    select id
-    from
-    actor.org_unit
-    where lower(shortname) in ($libs)
-    order by 1";
-    $log->($query) if $log;
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-    while (my @row = $sth->fetchrow_array) {
-        push( @ret, $row[0] );
-        if ($include_descendants) {
-            my @des = @{ get_org_descendants($dbh, $row[0], $log) };
-            push( @ret, @des );
-        }
-    }
-    return dedupe_array(\@ret);
-}
-
-# ----------------------------------------------------------
-# get_org_descendants - Get organization unit descendants
-# ----------------------------------------------------------
-sub get_org_descendants {
-    my ($dbh, $thisOrg, $log) = @_;
-    my $query   = "select id from actor.org_unit_descendants($thisOrg)";
-    my @ret     = ();
-    $log->($query) if $log;
-
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-    while (my $row = $sth->fetchrow_array) {
-        push( @ret, $row );
-    }
-
-    return \@ret;
 }
 
 # ----------------------------------------------------------

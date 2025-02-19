@@ -12,7 +12,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DB qw(get_dbh get_db_config create_history_table);
+use DB qw(get_dbh get_db_config create_history_table get_org_units);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
 use Logging qw(init_logging logmsg);
@@ -60,14 +60,15 @@ logmsg("SUCCESS", "Connected to DB");
 ###########################
 create_history_table($dbh, $log_file, $debug);
 
-# ###########################
-# # 4) Get Organization Units
-# ###########################
-# my $libraryname = $conf->{libraryname};
-# logmsg("Library name: $libraryname", $log_file, $debug);
-# my $include_descendants = exists $conf->{include_org_descendants};
-# my $org_units = get_org_units($dbh, $libraryname, $include_descendants, sub { logmsg($_[0], $log_file, $debug) });
-# my $pgLibs = join(',', @$org_units);
+###########################
+# 4) Get Organization Units
+###########################
+my $librarynames = $conf->{librarynames};
+logmsg("INFO", "Library names: $librarynames");
+my $include_descendants = exists $conf->{include_org_descendants};
+my $org_units = get_org_units($dbh, $libraryname, $include_descendants, sub { logmsg("INFO", $_[0]) });
+my $pgLibs = join(',', @$org_units);
+logmsg("INFO", "Organization units: " . join(', ', @$org_units));
 
 # ###########################
 # # 5) Figure out last run vs full
