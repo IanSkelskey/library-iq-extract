@@ -124,8 +124,8 @@ sub get_org_units {
 
     my @sp = split( /,/, $librarynames );
 
-    my $libs = join( '$$,$$', @sp );
-    $libs = '$$' . $libs . '$$';
+    @sp = map { "'" . lc($_) . "'" } @sp;
+    my $libs = join(',', @sp);
 
     my $query = "
     select id
