@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use Email::MIME;
 use Email::Sender::Simple 'sendmail';
-use Email::Sender::Transport::SMTP 'SMTP';
 use Exporter 'import';
 
 our @EXPORT_OK = qw(send_email);
@@ -27,16 +26,7 @@ sub send_email {
         },
         body_str => $body
     );
-
-    my $transport = Email::Sender::Transport::SMTP->new({
-        host          => 'smtp.example.com',  # Replace with your SMTP server
-        port          => 587,                 # Replace with your SMTP server port
-        sasl_username => 'your_username',     # Replace with your SMTP username
-        sasl_password => 'your_password',     # Replace with your SMTP password
-        ssl           => 1,                   # Enable SSL if required
-    });
-
-    sendmail($email, { transport => $transport });
+    sendmail($email);
 }
 
 1;
