@@ -12,7 +12,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time get_data);
+use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time get_data set_last_run_time);
 # use SFTP qw(do_sftp_upload);
 use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
@@ -209,6 +209,12 @@ unless ($no_email) {
 		." with subject: LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL")
 		." and body: LibraryIQ Extract has completed.");
 }
+
+###########################
+# 9) Update last run time & cleanup
+###########################
+
+set_last_run_time($dbh, $conf);
 
 logheader("Finished Library IQ Extract");
 
