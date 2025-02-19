@@ -101,19 +101,21 @@ my $bib_out_file = write_data_to_file(
 	$conf->{tempdir}
 );
 
-# # Process Items
-# my $item_out_file = process_data_type(
-#     'items',
-#     get_item_ids_sql($full, $pgLibs),
-#     get_item_detail_sql(),
-#     [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/],
-#     $dbh,
-#     $run_date_filter,
-#     $conf->{chunksize},
-#     $conf->{tempdir},
-#     $log_file,
-#     $debug
-# );
+# Process Items
+my @item_data = get_data(
+	get_item_ids_sql($full, $pgLibs),
+	get_item_detail_sql(),
+	$dbh,
+	$run_date_filter,
+	$conf->{chunksize}
+);
+
+my $item_out_file = write_data_to_file(
+	'items',
+	\@item_data,
+	[qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/],
+	$conf->{tempdir}
+);
 
 # # Process Circs
 # my $circ_out_file = process_data_type(
