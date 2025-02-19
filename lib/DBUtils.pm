@@ -54,7 +54,15 @@ sub chunked_ids {
     my @all_ids;
     my $sth = $dbh->prepare($sql);
     if (defined $date_filter) {
-        $sth->execute($date_filter, $date_filter);
+        # Determine the number of placeholders in the SQL statement
+        my $num_placeholders = () = $sql =~ /\?/g;
+        if ($num_placeholders == 2) {
+            $sth->execute($date_filter, $date_filter);
+        } elsif ($num_placeholders == 1) {
+            $sth->execute($date_filter);
+        } else {
+            $sth->execute();
+        }
     } else {
         $sth->execute();
     }
