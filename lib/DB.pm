@@ -7,7 +7,7 @@ use Exporter 'import';
 use Logging qw(logmsg);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -93,6 +93,23 @@ sub fetch_data_by_ids {
     }
     $sth->finish;
     return @rows;
+}
+
+# ----------------------------------------------------------
+# create_history_table - Create the libraryiq.history table if it doesn't exist
+# ----------------------------------------------------------
+sub create_history_table {
+    my ($dbh, $log_file, $debug) = @_;
+    my $sql = q{
+        CREATE SCHEMA IF NOT EXISTS libraryiq;
+        CREATE TABLE IF NOT EXISTS libraryiq.history (
+            id serial PRIMARY KEY,
+            key TEXT NOT NULL,
+            last_run TIMESTAMP WITH TIME ZONE DEFAULT '1000-01-01'::TIMESTAMPTZ
+        )
+    };
+    $dbh->do($sql);
+    logmsg("Ensured libraryiq.history table exists", $log_file, $debug);
 }
 
 1;

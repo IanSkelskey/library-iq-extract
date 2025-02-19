@@ -12,7 +12,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DB qw(get_dbh get_db_config);
+use DB qw(get_dbh get_db_config create_history_table);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
 use Logging qw(init_logging logmsg);
@@ -55,10 +55,10 @@ my $db_config = get_db_config($evergreen_config_file);
 my $dbh = get_dbh($db_config);
 logmsg("SUCCESS", "Connected to DB");
 
-# ###########################
-# # 3) Ensure History Table Exists
-# ###########################
-# create_history_table($dbh, $log_file, $debug);
+###########################
+# 3) Ensure History Table Exists
+###########################
+create_history_table($dbh, $log_file, $debug);
 
 # ###########################
 # # 4) Get Organization Units
