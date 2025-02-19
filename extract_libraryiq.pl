@@ -12,7 +12,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DB qw(get_dbh get_db_config create_history_table get_org_units);
+use DBUtils qw(get_dbh get_db_config create_history_table get_org_units);
 # use SFTP qw(do_sftp_upload);
 # use Email qw(send_email);
 use Logging qw(init_logging logmsg);

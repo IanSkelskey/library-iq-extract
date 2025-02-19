@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 use File::Spec;
-use DB qw(chunked_ids fetch_data_by_ids);
+use DBUtils qw(chunked_ids fetch_data_by_ids);
 use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
