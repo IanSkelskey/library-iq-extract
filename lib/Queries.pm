@@ -127,7 +127,7 @@ sub get_circ_ids_sql {
        FROM action.all_circulation acirc
        JOIN asset.copy ac ON (ac.id=acirc.target_copy)
        JOIN asset.call_number acn ON (acn.id=ac.call_number AND NOT ac.deleted AND NOT acn.deleted)
-       WHERE acn.owning_lib IN ($pgLibs) AND ( NOT acirc.deleted )
+       WHERE acn.owning_lib IN ($pgLibs)
     };
     # If incremental run, filter by date
     $sql .= q{ AND (acirc.xact_start > ?) } unless $full;
