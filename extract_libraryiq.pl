@@ -29,7 +29,7 @@ use Queries qw(
 	get_hold_detail_sql
 	);
 
-use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to_file);
+use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to_file create_tar_gz);
 
 ###########################
 # 1) Parse Config & CLI
@@ -165,11 +165,11 @@ my $hold_out_file = write_data_to_file(
 	$conf->{tempdir}
 );
 
-# ###########################
-# # 7) Create tar.gz archive
-# ###########################
-# my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file);
-# my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $log_file, $debug);
+###########################
+# 7) Create tar.gz archive
+###########################
+my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file);
+my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix});
 
 # ###########################
 # # 8) SFTP upload & Email

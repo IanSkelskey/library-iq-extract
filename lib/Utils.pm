@@ -147,7 +147,7 @@ sub write_data_to_file {
 # create_tar_gz - Create a tar.gz archive of the given files
 # ----------------------------------------------------------
 sub create_tar_gz {
-    my ($files_ref, $archive_dir, $filenameprefix, $log_file, $debug) = @_;
+    my ($files_ref, $archive_dir, $filenameprefix) = @_;
     my @files = @$files_ref;
     my $dt = DateTime->now( time_zone => "local" );
     my $fdate = $dt->ymd;
@@ -157,7 +157,7 @@ sub create_tar_gz {
     $tar->add_files(@files);
     $tar->write($tar_file, COMPRESS_GZIP);
 
-    logmsg("Created tar.gz archive $tar_file", $log_file, $debug);
+    logmsg("INFO", "Created tar.gz archive $tar_file");
     return $tar_file;
 }
 
