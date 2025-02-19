@@ -3,6 +3,7 @@ package Utils;
 use strict;
 use warnings;
 use Exporter 'import';
+use Encode;
 use File::Spec;
 use Logging qw(logmsg);
 use Archive::Tar;
