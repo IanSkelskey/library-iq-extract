@@ -169,7 +169,7 @@ sub get_org_descendants {
 # get_last_run_time - Get the last run time from the database
 # ----------------------------------------------------------
 sub get_last_run_time {
-    my ($dbh, $c, $log) = @_;
+    my ($dbh, $c) = @_;
     # You can store last run in a dedicated table, or read from a file, etc.
     my $sql = "SELECT last_run FROM libraryiq.history WHERE key=? LIMIT 1";
     my $sth = $dbh->prepare($sql);
@@ -179,7 +179,7 @@ sub get_last_run_time {
         return $ts; # e.g. '2025-01-01'
     } else {
         $sth->finish;
-        $log->("No existing entry. Using old date -> 1900-01-01");
+        logmsg("INFO", "No existing entry. Using old date -> 1900-01-01");
         return '1900-01-01';
     }
 }
@@ -188,7 +188,7 @@ sub get_last_run_time {
 # set_last_run_time - Set the last run time in the database
 # ----------------------------------------------------------
 sub set_last_run_time {
-    my ($dbh, $c, $log) = @_;
+    my ($dbh, $c) = @_;
     my $sql_upd = q{
       UPDATE libraryiq.history SET last_run=now() WHERE key=?
     };
@@ -201,7 +201,7 @@ sub set_last_run_time {
       };
       $dbh->do($sql_ins, undef, $c->{libraryname});
     }
-    $log->("Updated last_run time for key=$c->{libraryname}");
+    logmsg("INFO", "Updated last_run time for key=$c->{libraryname}");
 }
 
 # ----------------------------------------------------------
