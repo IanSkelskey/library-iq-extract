@@ -5,7 +5,6 @@ use warnings;
 use DBI;
 use Exporter 'import';
 use Logging qw(logmsg);
-use Utils qw(dedupe_array);
 use XML::Simple;
 
 our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units);
@@ -164,5 +163,22 @@ sub get_org_descendants {
 
     return \@ret;
 }
+
+# ----------------------------------------------------------
+# dedupe_array - Remove duplicates from an array
+# ----------------------------------------------------------
+sub dedupe_array {
+    my ($arrRef) = @_;
+    my @arr     = $arrRef ? @{$arrRef} : ();
+    my %deduper = ();
+    $deduper{$_} = 1 foreach (@arr);
+    my @ret = ();
+    while ( ( my $key, my $val ) = each(%deduper) ) {
+        push( @ret, $key );
+    }
+    @ret = sort @ret;
+    return \@ret;
+}
+
 
 1;

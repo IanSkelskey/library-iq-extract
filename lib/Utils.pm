@@ -9,7 +9,7 @@ use Logging qw(logmsg);
 use Archive::Tar;
 use Getopt::Long;
 
-our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time set_last_run_time process_data_type create_tar_gz dedupe_array);
+our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args get_last_run_time set_last_run_time process_data_type create_tar_gz);
 
 # ----------------------------------------------------------
 # read_config - Read configuration file
@@ -170,22 +170,6 @@ sub process_data_type {
     close $OUT;
     logmsg("Wrote $type data to $out_file", $log_file, $debug);
     return $out_file;
-}
-
-# ----------------------------------------------------------
-# dedupe_array - Remove duplicates from an array
-# ----------------------------------------------------------
-sub dedupe_array {
-    my ($arrRef) = @_;
-    my @arr     = $arrRef ? @{$arrRef} : ();
-    my %deduper = ();
-    $deduper{$_} = 1 foreach (@arr);
-    my @ret = ();
-    while ( ( my $key, my $val ) = each(%deduper) ) {
-        push( @ret, $key );
-    }
-    @ret = sort @ret;
-    return \@ret;
 }
 
 # ----------------------------------------------------------
