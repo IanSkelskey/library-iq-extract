@@ -8,7 +8,7 @@ use Logging qw(logmsg);
 use Utils qw(dedupe_array);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time process_data_type);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time get_data);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -202,21 +202,6 @@ sub set_last_run_time {
       $dbh->do($sql_ins, undef, $c->{libraryname});
     }
     logmsg("INFO", "Updated last_run time for key=$c->{libraryname}");
-}
-
-# ----------------------------------------------------------
-# process_data_type - Process data type and write to file
-# ----------------------------------------------------------
-sub process_data_type {
-    my ($type, $id_sql, $detail_sql, $columns, $dbh, $date_filter, $chunk_size, $tempdir, $log_file, $debug) = @_;
-
-    # Get data based on the provided SQL query and date filter
-    my @data = get_data($id_sql, $detail_sql, $dbh, $date_filter, $chunk_size, $log_file, $debug);
-
-    # Write data to file
-    my $out_file = write_data_to_file($type, \@data, $columns, $tempdir, $log_file, $debug);
-
-    return $out_file;
 }
 
 # ----------------------------------------------------------
