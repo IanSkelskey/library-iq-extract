@@ -14,7 +14,7 @@ use warnings;
 use lib 'lib';  # or the path to your local modules
 use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time get_data);
 # use SFTP qw(do_sftp_upload);
-# use Email qw(send_email);
+use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
 use Queries qw(
 	get_bib_ids_sql
@@ -192,16 +192,16 @@ my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenamep
 #     }
 # }
 
-# unless ($no_email) {
-#     # Minimal email
-#     my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
-#     send_email(
-#         $conf->{fromemail},
-#         \@recipients,
-#         "LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
-#         ($sftp_error ? "FAILED with: $sftp_error" : "SUCCESS"),
-#     );
-# }
+unless ($no_email) {
+	# Minimal email
+	my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
+	send_email(
+		$conf->{fromemail},
+		\@recipients,
+		"LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
+		"LibraryIQ Extract has completed."
+	);
+}
 
 logheader("Finished Library IQ Extract");
 
