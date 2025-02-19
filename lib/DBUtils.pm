@@ -181,7 +181,7 @@ sub get_last_run_time {
     # You can store last run in a dedicated table, or read from a file, etc.
     my $sql = "SELECT last_run FROM libraryiq.history WHERE key=? LIMIT 1";
     my $sth = $dbh->prepare($sql);
-    $sth->execute($c->{libraryname});
+    $sth->execute($c->{librarynames});
     if (my ($ts) = $sth->fetchrow_array) {
         $sth->finish;
         return $ts; # e.g. '2025-01-01'
