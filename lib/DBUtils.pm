@@ -201,15 +201,15 @@ sub set_last_run_time {
       UPDATE libraryiq.history SET last_run=now() WHERE key=?
     };
     my $sth_upd = $dbh->prepare($sql_upd);
-    my $rows = $sth_upd->execute($c->{libraryname});
+    my $rows = $sth_upd->execute($c->{librarynames});
     if ($rows == 0) {
       # Might need an INSERT if row does not exist
       my $sql_ins = q{
         INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
       };
-      $dbh->do($sql_ins, undef, $c->{libraryname});
+      $dbh->do($sql_ins, undef, $c->{librarynames});
     }
-    logmsg("INFO", "Updated last_run time for key=$c->{libraryname}");
+    logmsg("INFO", "Updated last_run time for key=$c->{librarynames}");
 }
 
 # ----------------------------------------------------------
