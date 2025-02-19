@@ -60,6 +60,4 @@ sub logheader {
     }
 }
 
-our @EXPORT_OK = qw(logmsg init_logging logheader);
-
 1;
