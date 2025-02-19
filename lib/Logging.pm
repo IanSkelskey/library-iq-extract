@@ -27,7 +27,6 @@ sub logmsg {
     my $ts = _get_timestamp();
     my $log_entry = "[$ts] [$level] $msg\n";
     _write_log($log_entry);
-    print $log_entry if $debug;  # also echo to stdout if debug
 }
 
 # ----------------------------------------------------------
@@ -49,13 +48,6 @@ sub logheader {
 
     my $log_entry = "$border\n$formatted_header\n$formatted_timestamp\n$border\n";
     _write_log($log_entry);
-
-    if ($debug) {
-        print "$border\n";
-        print "$formatted_header\n";
-        print "$formatted_timestamp\n";
-        print "$border\n";
-    }
 }
 
 # ----------------------------------------------------------
@@ -66,13 +58,14 @@ sub _get_timestamp {
 }
 
 # ----------------------------------------------------------
-# _write_log - Write a log entry to the log file
+# _write_log - Write a log entry to the log file and console
 # ----------------------------------------------------------
 sub _write_log {
     my ($log_entry) = @_;
     open my $LOG, '>>', $log_file or die "Cannot open $log_file: $!";
     print $LOG $log_entry;
     close $LOG;
+    print $log_entry;  # Also print to console
 }
 
 1;
