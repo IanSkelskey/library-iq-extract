@@ -1,7 +1,7 @@
 logfile = libraryiq_export.log
 
 tempdir = /tmp
-archive = /path/to/archive
+archive = archive
 
 # This needs to match actor.org_unit.shortname
 # This is how the query gets only data for that system/branch
