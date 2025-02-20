@@ -128,13 +128,16 @@ sub process_datatype {
     return write_data_to_file($datatype, \@data, $fields, $conf->{tempdir});
 }
 
+# Define a very old date for full runs
+my $very_old_date = '1900-01-01';
+
 # Process BIBs
 my $bib_out_file = process_datatype(
     'bibs',
     get_bib_ids_sql($full, $pgLibs),
     get_bib_detail_sql(),
     [qw/id isbn upc mat_type pubdate publisher title author/],
-    $full ? () : ($last_run_time, $last_run_time)
+    $full ? ($very_old_date, $very_old_date) : ($last_run_time, $last_run_time)
 );
 
 # Process Items
@@ -143,7 +146,7 @@ my $item_out_file = process_datatype(
     get_item_ids_sql($full, $pgLibs),
     get_item_detail_sql(),
     [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/],
-    $full ? () : ($last_run_time, $last_run_time)
+    $full ? ($very_old_date, $very_old_date) : ($last_run_time, $last_run_time)
 );
 
 # Process Circs
@@ -152,7 +155,7 @@ my $circ_out_file = process_datatype(
     get_circ_ids_sql($full, $pgLibs),
     get_circ_detail_sql(),
     [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_time/],
-    $full ? () : ($last_run_time)
+    $full ? ($very_old_date) : ($last_run_time)
 );
 
 # Process Patrons
@@ -161,7 +164,7 @@ my $patron_out_file = process_datatype(
     get_patron_ids_sql($full, $pgLibs),
     get_patron_detail_sql(),
     [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/],
-    $full ? () : ($last_run_time, $last_run_time)
+    $full ? ($very_old_date, $very_old_date) : ($last_run_time, $last_run_time)
 );
 
 # Process Holds
@@ -170,7 +173,7 @@ my $hold_out_file = process_datatype(
     get_hold_ids_sql($full, $pgLibs),
     get_hold_detail_sql(),
     [qw/bibrecordid pickup_lib shortname/],
-    $full ? () : ($last_run_time)
+    $full ? ($very_old_date) : ($last_run_time)
 );
 
 # Process Inhouse
@@ -179,7 +182,7 @@ my $inhouse_out_file = process_datatype(
     get_inhouse_ids_sql($full, $pgLibs),
     get_inhouse_detail_sql(),
     [qw/itemid barcode bibid checkout_date checkout_branch/],
-    $full ? () : ($last_run_time)
+    $full ? ($very_old_date) : ($last_run_time)
 );
 
 ###########################
