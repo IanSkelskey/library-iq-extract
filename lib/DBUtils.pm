@@ -163,6 +163,13 @@ sub get_org_units {
             push( @ret, @des );
         }
     }
+
+    if (!@ret) {
+        my $error_msg = "No organization units found for library shortnames: $librarynames";
+        logmsg("ERROR", $error_msg);
+        die "$error_msg\n";
+    }
+
     return dedupe_array(\@ret);
 }
 
