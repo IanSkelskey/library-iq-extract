@@ -78,46 +78,69 @@ sub get_item_ids_sql {
 # ----------------------------------------------------------
 sub get_item_detail_sql {
     return q{
-       SELECT ac.id as itemid,
-              ac.barcode,
-              i1.index_vector as isbn,
-              i2.index_vector as upc,
-              acn.record as bibid,
-              acl.id as collection_code,
-              ac.circ_modifier as mattype,
-              aou_circ.shortname as branch_location,
-              aou_owner.shortname as owning_location,
-              btrim(regexp_replace(concat(acnp.label, ' ', acn.label, ' ', acns.label), '\s{2,}', ' ')) as call_number,
-              acl.name as shelf_location,
-              ac.create_date,
-              ccs.name as status,
-              chkoutdate.lastcheckout,
-              chkindate.lastcheckin,
-              duedate.due,
-              COALESCE(ytd.ytdcirccount, 0) as ytd_circ_count,
-              COALESCE(circcount.tcirccount, 0) as circ_count
-       FROM asset.copy ac
-       JOIN asset.call_number acn ON (acn.id=ac.call_number)
-       JOIN biblio.record_entry bre ON (bre.id=acn.record)
-       LEFT JOIN reporter.materialized_simple_record rmsr ON (rmsr.id = bre.id)
-       LEFT JOIN metabib.combined_identifier_field_entry i1 ON (i1.record=bre.id AND i1.metabib_field=18)
-       LEFT JOIN metabib.combined_identifier_field_entry i2 ON (i2.record=bre.id AND i2.metabib_field=20)
-       LEFT JOIN asset.copy_location acl ON (acl.id=ac.location)
-       JOIN actor.org_unit aou_owner ON (acn.owning_lib=aou_owner.id)
-       JOIN actor.org_unit aou_circ ON (ac.circ_lib=aou_circ.id)
-       JOIN asset.call_number_prefix acnp ON (acnp.id=acn.prefix)
-       JOIN asset.call_number_suffix acns ON (acns.id=acn.suffix)
-       JOIN config.copy_status ccs ON (ccs.id=ac.status)
-       LEFT JOIN lateral (SELECT COUNT(*) "ytdcirccount" FROM action.all_circulation acirc2
-                          WHERE acirc2.target_copy=ac.id AND date_part('year', acirc2.xact_start) = date_part('year', now()) ) ytd ON (1=1)
-       LEFT JOIN lateral (SELECT MAX(acirc2.xact_start) "lastcheckout" FROM action.all_circulation acirc2
-                          WHERE acirc2.target_copy=ac.id  AND acirc2.xact_start IS NOT NULL) chkoutdate ON (1=1)
-       LEFT JOIN lateral (SELECT MAX(acirc2.xact_finish) "lastcheckin" FROM action.all_circulation acirc2
-                          WHERE acirc2.target_copy=ac.id  AND acirc2.xact_finish IS NOT NULL) chkindate ON (1=1)
-       LEFT JOIN lateral (SELECT MAX(acirc2.due_date) "due" FROM action.all_circulation acirc2 WHERE acirc2.target_copy=ac.id  AND acirc2.xact_finish IS NULL) duedate ON (1=1)
-       LEFT JOIN lateral (SELECT COUNT(*) "tcirccount" FROM action.all_circulation acirc2 WHERE acirc2.target_copy=ac.id ) circcount ON (1=1)
-       WHERE ac.id IN (:id_list)
-    };
+    SELECT
+    ac.id as itemid,
+    ac.barcode,
+    i1.index_vector as isbn,
+    i2.index_vector as upc,
+    acn.record as bibid,
+    acl.id as collection_code,
+    ac.circ_modifier as mattype,
+    aou_circ.shortname as branch_location,
+    aou_owner.shortname as owning_location,
+    btrim(regexp_replace(concat(acnp.label, ' ', acn.label, ' ', acns.label), '\\s{2,}', ' ')) as call_number,
+    acl.name as shelf_location,
+    ac.create_date,
+    ccs.name as status,
+    chkoutdate.lastcheckout,
+    chkindate.lastcheckin,
+    duedate.due,
+    COALESCE(ytd.ytdcirccount, 0) as ytd_circ_count,
+    COALESCE(circcount.tcirccount, 0) as circ_count
+    FROM
+    asset.copy ac
+    JOIN asset.call_number acn ON (acn.id=ac.call_number )
+    JOIN biblio.record_entry bre ON (bre.id=acn.record)
+    LEFT JOIN reporter.materialized_simple_record rmsr ON (rmsr.id = bre.id)
+    LEFT JOIN metabib.combined_identifier_field_entry i1 ON (i1.record=bre.id AND i1.metabib_field=18)
+    LEFT JOIN metabib.combined_identifier_field_entry i2 ON (i2.record=bre.id AND i2.metabib_field=20)
+    LEFT JOIN asset.copy_location acl ON (acl.id=ac.location)
+    JOIN actor.org_unit aou_owner ON (acn.owning_lib=aou_owner.id)
+    JOIN actor.org_unit aou_circ ON (ac.circ_lib=aou_circ.id)
+    JOIN asset.call_number_prefix acnp ON (acnp.id=acn.prefix)
+    JOIN asset.call_number_suffix acns ON (acns.id=acn.suffix)
+    JOIN config.copy_status ccs ON (ccs.id=ac.status)
+    LEFT JOIN lateral (
+        SELECT COUNT(*) "ytdcirccount"
+        FROM action.all_circulation acirc2
+        WHERE acirc2.target_copy=ac.id
+        AND date_part('year', acirc2.xact_start) = date_part('year', now())
+    ) ytd ON (1=1)
+    LEFT JOIN lateral (
+        SELECT MAX(acirc2.xact_start) "lastcheckout"
+        FROM action.all_circulation acirc2
+        WHERE acirc2.target_copy=ac.id
+        AND acirc2.xact_start IS NOT NULL
+    ) chkoutdate ON (1=1)
+    LEFT JOIN lateral (
+        SELECT MAX(acirc2.xact_finish) "lastcheckin"
+        FROM action.all_circulation acirc2
+        WHERE acirc2.target_copy=ac.id
+        AND acirc2.xact_finish IS NOT NULL
+    ) chkindate ON (1=1)
+    LEFT JOIN lateral (
+        SELECT MAX(acirc2.due_date) "due"
+        FROM action.all_circulation acirc2
+        WHERE acirc2.target_copy=ac.id
+        AND acirc2.xact_finish IS NULL
+    ) duedate ON (1=1)
+    LEFT JOIN lateral (
+        SELECT COUNT(*) "tcirccount"
+        FROM action.all_circulation acirc2
+        WHERE acirc2.target_copy=ac.id
+    ) circcount ON (1=1)
+    WHERE ac.id IN (:id_list)
+        };
 }
 
 # ----------------------------------------------------------
