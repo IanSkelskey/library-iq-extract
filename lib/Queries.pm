@@ -140,7 +140,8 @@ sub get_item_detail_sql {
         WHERE acirc2.target_copy=ac.id
     ) circcount ON (1=1)
     WHERE ac.id IN (:id_list)
-        };
+    AND (ac.edit_date > ? OR ac.status_changed_time > ?)
+    };
 }
 
 # ----------------------------------------------------------
