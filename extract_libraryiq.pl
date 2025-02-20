@@ -22,7 +22,7 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time set_last_run_time chunked_ids fetch_data_by_ids);
+use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time set_last_run_time chunked_ids fetch_data_by_ids drop_schema);
 # use SFTP qw(do_sftp_upload);
 use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);

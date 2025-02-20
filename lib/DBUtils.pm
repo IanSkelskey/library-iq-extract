@@ -8,7 +8,7 @@ use Logging qw(logmsg);
 use Utils qw(dedupe_array);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time drop_schema);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
