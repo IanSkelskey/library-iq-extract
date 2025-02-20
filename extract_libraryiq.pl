@@ -37,6 +37,8 @@ use Queries qw(
 	get_patron_detail_sql
 	get_hold_ids_sql
 	get_hold_detail_sql
+	get_inhouse_ids_sql
+	get_inhouse_detail_sql
 	);
 
 use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to_file create_tar_gz);
@@ -170,10 +172,20 @@ my $hold_out_file = process_datatype(
     [qw/bibrecordid pickup_lib shortname/],
     $full ? () : ($last_run_time)
 );
+
+# Process Inhouse
+my $inhouse_out_file = process_datatype(
+    'inhouse',
+    get_inhouse_ids_sql($full, $pgLibs),
+    get_inhouse_detail_sql(),
+    [qw/itemid barcode bibid checkout_date checkout_branch/],
+    $full ? () : ($last_run_time)
+);
+
 ###########################
 # 7) Create tar.gz archive
 ###########################
-my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file);
+my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file, $inhouse_out_file);
 my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix});
 
 # ###########################

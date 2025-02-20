@@ -15,6 +15,8 @@ our @EXPORT_OK = qw(
     get_patron_detail_sql
     get_hold_ids_sql
     get_hold_detail_sql
+    get_inhouse_ids_sql
+    get_inhouse_detail_sql
 );
 
 # ----------------------------------------------------------
@@ -274,6 +276,43 @@ sub get_hold_detail_sql {
        LEFT JOIN metabib.metarecord mmr ON(mmr.id=ahr.target AND ahr.hold_type='M')
        WHERE ahr.id IN (:id_list)
        AND (ahr.request_time > ?)
+    };
+}
+
+# ----------------------------------------------------------
+# get_inhouse_ids_sql - Return SQL for fetching Inhouse Use IDs
+# ----------------------------------------------------------
+sub get_inhouse_ids_sql {
+    my ($full, $pgLibs) = @_;
+    my $sql = qq{
+       SELECT house.id
+       FROM action.in_house_use house
+       JOIN asset.copy ac ON house.item=ac.id
+       JOIN asset.call_number acn ON acn.id=ac.call_number
+       WHERE acn.owning_lib IN ($pgLibs)
+    };
+    # If incremental run, filter by date
+    $sql .= q{ AND (house.use_time > ?) } unless $full;
+    return $sql;
+}
+
+# ----------------------------------------------------------
+# get_inhouse_detail_sql - Return SQL for fetching Inhouse Use details
+# ----------------------------------------------------------
+sub get_inhouse_detail_sql {
+    return q{
+       SELECT
+              ac.id as itemid,
+              ac.barcode,
+              acn.record as bibid,
+              house.use_time as checkout_date,
+              aou_circ.shortname as checkout_branch
+       FROM action.in_house_use house
+       JOIN asset.copy ac ON house.item=ac.id
+       JOIN asset.call_number acn ON acn.id=ac.call_number
+       JOIN actor.org_unit aou_circ ON house.org_unit=aou_circ.id
+       WHERE house.id IN (:id_list)
+       AND house.use_time > ?
     };
 }
 

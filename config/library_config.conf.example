@@ -1,6 +1,6 @@
 logfile = libraryiq_export.log
 
-tempdir = /tmp
+tempdir = tmp
 archive = archive
 
 # This needs to match actor.org_unit.shortname
