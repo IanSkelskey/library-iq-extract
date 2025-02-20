@@ -122,6 +122,17 @@ sub create_history_table {
 }
 
 # ----------------------------------------------------------
+# drop_schema - Drop the libraryiq schema
+# ----------------------------------------------------------
+sub drop_schema {
+    my ($dbh) = @_;
+    my $sql = q{
+        DROP SCHEMA IF EXISTS libraryiq CASCADE
+    };
+    $dbh->do($sql);
+}
+
+# ----------------------------------------------------------
 # get_org_units - Get organization units based on library shortnames
 # ----------------------------------------------------------
 sub get_org_units {

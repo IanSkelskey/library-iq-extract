@@ -82,7 +82,7 @@ sub check_config {
 # read_cmd_args - Read and validate command line arguments
 # ----------------------------------------------------------
 sub read_cmd_args {
-    my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = @_;
+    my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp, $drop_history) = @_;
     $evergreen_config_file ||= '/openils/conf/opensrf.xml';  # Default value
 
     GetOptions(
@@ -92,9 +92,10 @@ sub read_cmd_args {
         "full"               => \$full,
         "no-email"           => \$no_email,
         "no-sftp"            => \$no_sftp,
+        "drop-history"       => \$drop_history,
     );
 
-    return ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp);
+    return ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp, $drop_history);
 }
 
 

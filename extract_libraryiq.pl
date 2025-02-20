@@ -48,7 +48,7 @@ use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to
 logheader("Reading Configuration and CLI Arguments");
 
 # Read command line arguments
-my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp) = read_cmd_args();
+my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp, $drop_history) = read_cmd_args();
 
 # Read and check configuration file
 my $conf = read_config($config_file);
@@ -72,6 +72,13 @@ logmsg("SUCCESS", "Connected to DB");
 ###########################
 # 3) Ensure History Table Exists
 ###########################
+
+# Drop and recreate the libraryiq schema if --drop-history is specified
+if ($drop_history) {
+    drop_schema($dbh);
+    logmsg("SUCCESS", "Dropped existing LibraryIQ schema.");
+}
+
 create_history_table($dbh, $log_file, $debug);
 
 ###########################

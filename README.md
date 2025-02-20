@@ -94,13 +94,14 @@ Run the script without any network operations (email, SFTP):
 
 ### Command Line Options
 
-| Option       | Description                                                    |
-| ------------ | -------------------------------------------------------------- |
-| `--config`   | Path to the configuration file (default: library_config.conf). |
-| `--debug`    | Enable debug mode for more verbose output.                     |
-| `--full`     | Perform a full dataset extraction.                             |
-| `--no-email` | Disable email notifications.                                   |
-| `--no-sftp`  | Disable SFTP file transfer.                                    |
+| Option           | Description                                                    |
+| ---------------- | -------------------------------------------------------------- |
+| `--config`       | Path to the configuration file (default: library_config.conf). |
+| `--debug`        | Enable debug mode for more verbose output.                     |
+| `--full`         | Perform a full dataset extraction.                             |
+| `--no-email`     | Disable email notifications.                                   |
+| `--no-sftp`      | Disable SFTP file transfer.                                    |
+| `--drop-history` | Drop and recreate the libraryiq schema before running.         |
 
 ## Perl Modules
 
