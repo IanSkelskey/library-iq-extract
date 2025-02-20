@@ -8,7 +8,7 @@ use Logging qw(logmsg);
 use Utils qw(dedupe_array);
 use XML::Simple;
 
-our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time get_data);
+our @EXPORT_OK = qw(get_dbh chunked_ids fetch_data_by_ids get_db_config create_history_table get_org_units get_last_run_time set_last_run_time);
 
 # ----------------------------------------------------------
 # get_dbh - Return a connected DBI handle
@@ -125,7 +125,7 @@ sub create_history_table {
 # get_org_units - Get organization units based on library shortnames
 # ----------------------------------------------------------
 sub get_org_units {
-    my ($dbh, $librarynames, $include_descendants, $log) = @_;
+    my ($dbh, $librarynames, $include_descendants) = @_;
     my @ret = ();
 
     # spaces don't belong here
@@ -142,13 +142,13 @@ sub get_org_units {
     actor.org_unit
     where lower(shortname) in ($libs)
     order by 1";
-    $log->($query) if $log;
+    logmsg("DEBUG", "Executing query: $query");
     my $sth = $dbh->prepare($query);
     $sth->execute();
     while (my @row = $sth->fetchrow_array) {
         push( @ret, $row[0] );
         if ($include_descendants) {
-            my @des = @{ get_org_descendants($dbh, $row[0], $log) };
+            my @des = @{ get_org_descendants($dbh, $row[0]) };
             push( @ret, @des );
         }
     }
@@ -159,15 +159,15 @@ sub get_org_units {
 # get_org_descendants - Get organization unit descendants
 # ----------------------------------------------------------
 sub get_org_descendants {
-    my ($dbh, $thisOrg, $log) = @_;
-    my $query   = "select id from actor.org_unit_descendants($thisOrg)";
-    my @ret     = ();
-    $log->($query) if $log;
+    my ($dbh, $thisOrg) = @_;
+    my $query = "select id from actor.org_unit_descendants($thisOrg)";
+    my @ret = ();
+    logmsg("DEBUG", "Executing query: $query");
 
     my $sth = $dbh->prepare($query);
     $sth->execute();
     while (my $row = $sth->fetchrow_array) {
-        push( @ret, $row );
+        push(@ret, $row);
     }
 
     return \@ret;
@@ -210,27 +210,6 @@ sub set_last_run_time {
       $dbh->do($sql_ins, undef, $c->{librarynames});
     }
     logmsg("INFO", "Updated last_run time for key=$c->{librarynames}");
-}
-
-# ----------------------------------------------------------
-# get_data - Get data based on ID and detail SQL queries
-# ----------------------------------------------------------
-sub get_data {
-    my ($id_sql, $detail_sql, $dbh, $date_filter, $chunk_size) = @_;
-
-    # Get chunks of IDs based on the provided SQL query and date filter
-    my @chunks = chunked_ids($dbh, $id_sql, $date_filter, $chunk_size);
-    logmsg("INFO", "Found ".(scalar @chunks)." ID chunks");
-
-    my @data;
-    # Process each chunk of IDs
-    foreach my $chunk (@chunks) {
-        # Fetch data for the current chunk of IDs
-        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
-        push @data, @rows;
-    }
-
-    return @data;
 }
 
 1;

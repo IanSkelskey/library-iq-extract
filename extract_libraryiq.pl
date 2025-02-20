@@ -17,15 +17,15 @@ use warnings;
 # use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
-use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time get_data set_last_run_time);
+use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time set_last_run_time chunked_ids fetch_data_by_ids);
 # use SFTP qw(do_sftp_upload);
 use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
 use Queries qw(
 	get_bib_ids_sql
 	get_bib_detail_sql
-    get_item_ids_sql
-    get_item_detail_sql
+	get_item_ids_sql
+	get_item_detail_sql
 	get_circ_ids_sql
 	get_circ_detail_sql
 	get_patron_ids_sql
@@ -75,7 +75,7 @@ create_history_table($dbh, $log_file, $debug);
 my $librarynames = $conf->{librarynames};
 logmsg("INFO", "Library names: $librarynames");
 my $include_descendants = exists $conf->{include_org_descendants};
-my $org_units = get_org_units($dbh, $librarynames, $include_descendants, sub { logmsg("INFO", $_[0]) });
+my $org_units = get_org_units($dbh, $librarynames, $include_descendants);
 my $pgLibs = join(',', @$org_units);
 logmsg("INFO", "Organization units: $pgLibs");
 
@@ -87,90 +87,71 @@ my $run_date_filter = $full ? undef : $last_run_time;
 logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 
 ###########################
-# 6) For each data type, we:
-#   a) get IDs in chunks
-#   b) for each chunk, fetch details
-#   c) write data to a file
+# 6) Process Data Types
 ###########################
 
+sub get_data {
+	my ($id_sql, $detail_sql) = @_;
+
+	# Get chunks of IDs based on the provided SQL query and date filter
+	my @chunks = chunked_ids($dbh, $id_sql, $run_date_filter, $conf->{chunksize});
+	logmsg("INFO", "Found ".(scalar @chunks)." ID chunks");
+
+	my @data;
+	# Process each chunk of IDs
+	foreach my $chunk (@chunks) {
+		# Fetch data for the current chunk of IDs
+		my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
+		push @data, @rows;
+	}
+
+	return @data;
+}
+
+sub process_datatype {
+	my ($datatype, $id_sql, $detail_sql, $fields) = @_;
+	my @data = get_data($id_sql, $detail_sql);
+	return write_data_to_file($datatype, \@data, $fields, $conf->{tempdir});
+}
+
 # Process BIBs
-my @bib_data = get_data(
+my $bib_out_file = process_datatype(
+	'bibs',
 	get_bib_ids_sql($full, $pgLibs),
 	get_bib_detail_sql(),
-	$dbh,
-	$run_date_filter,
-	$conf->{chunksize}
-);
-
-my $bib_out_file = write_data_to_file(
-	'bibs',
-	\@bib_data,
-	[qw/id isbn upc mat_type pubdate publisher title author/],
-	$conf->{tempdir}
+	[qw/id isbn upc mat_type pubdate publisher title author/]
 );
 
 # Process Items
-my @item_data = get_data(
+my $item_out_file = process_datatype(
+	'items',
 	get_item_ids_sql($full, $pgLibs),
 	get_item_detail_sql(),
-	$dbh,
-	$run_date_filter,
-	$conf->{chunksize}
-);
-
-my $item_out_file = write_data_to_file(
-	'items',
-	\@item_data,
-	[qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/],
-	$conf->{tempdir}
+	[qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/]
 );
 
 # Process Circs
-my @circ_data = get_data(
+my $circ_out_file = process_datatype(
+	'circs',
 	get_circ_ids_sql($full, $pgLibs),
 	get_circ_detail_sql(),
-	$dbh,
-	$run_date_filter,
-	$conf->{chunksize}
-);
-
-my $circ_out_file = write_data_to_file(
-	'circs',
-	\@circ_data,
-	[qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_date/],
-	$conf->{tempdir}
+	[qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_date/]
 );
 
 # Process Patrons
-my @patron_data = get_data(
+my $patron_out_file = process_datatype(
+	'patrons',
 	get_patron_ids_sql($full, $pgLibs),
 	get_patron_detail_sql(),
-	$dbh,
-	$run_date_filter,
-	$conf->{chunksize}
-);
-
-my $patron_out_file = write_data_to_file(
-	'patrons',
-	\@patron_data,
-	[qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/],
-	$conf->{tempdir}
+	[qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/]
 );
 
 # Process Holds
-my @hold_data = get_data(
+my $hold_out_file = process_datatype(
+	'holds',
 	get_hold_ids_sql($full, $pgLibs),
 	get_hold_detail_sql(),
-	$dbh,
-	$run_date_filter,
-	$conf->{chunksize}
-);
-
-my $hold_out_file = write_data_to_file(
-	'holds',
-	\@hold_data,
-	[qw/bibrecordid pickup_lib shortname/],
-	$conf->{tempdir}
+	[qw/bibrecordid pickup_lib shortname/]
 );
 
 ###########################
