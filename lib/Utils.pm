@@ -150,11 +150,12 @@ sub write_data_to_file {
 # create_tar_gz - Create a tar.gz archive of the given files
 # ----------------------------------------------------------
 sub create_tar_gz {
-    my ($files_ref, $archive_dir, $filenameprefix) = @_;
+    my ($files_ref, $archive_dir, $filenameprefix, $full) = @_;
     my @files = @$files_ref;
     my $dt = DateTime->now( time_zone => "local" );
     my $fdate = $dt->ymd;
-    my $tar_file = File::Spec->catfile($archive_dir, "$filenameprefix" . "_$fdate.tar.gz");
+    my $suffix = $full ? 'full' : 'diff';
+    my $tar_file = File::Spec->catfile($archive_dir, "$filenameprefix" . "_$fdate" . "_$suffix.tar.gz");
 
     my $tar = Archive::Tar->new;
     $tar->add_files(@files);

@@ -189,7 +189,7 @@ my $inhouse_out_file = process_datatype(
 # 7) Create tar.gz archive
 ###########################
 my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file, $inhouse_out_file);
-my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix});
+my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
 
 # ###########################
 # # 8) SFTP upload & Email
