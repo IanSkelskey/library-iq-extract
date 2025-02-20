@@ -22,7 +22,7 @@ This software extracts data from an Evergreen server and securely transfers the 
 📁 lib/
     ├── 🐪 DBUtils.pm
     ├── 🐪 Email.pm
-    ├── 🐪 Logging.pm
+    ├── 🐪 Logging.pm   
     ├── 🐪 Queries.pm
     ├── 🐪 SFTP.pm
     └── 🐪 Utils.pm
@@ -54,13 +54,21 @@ This software extracts data from an Evergreen server and securely transfers the 
 
 Edit the `config/library_config.conf` file to set the appropriate values for your environment. Key configuration options include:
 
-- `logfile`: Path to the log file.
-- `tempdir`: Temporary directory for storing intermediate files.
-- `archive`: Directory for storing archived files.
-- `libraryname`: Comma-separated list of branch/system shortnames.
-- `chunksize`: Number of records to process per chunk.
-- `ftphost`, `ftplogin`, `ftppass`, `remote_directory`: SFTP server details.
-- `alwaysemail`, `fromemail`, `erroremaillist`, `successemaillist`: Email notification settings.
+| Configuration Option | Description                                                   |
+| -------------------- | ------------------------------------------------------------- |
+| `logfile`            | Path to the log file.                                         |
+| `tempdir`            | Temporary directory for storing intermediate files.           |
+| `archive`            | Directory for storing archived files.                         |
+| `librarynames`       | Comma-separated list of branch/system shortnames.             |
+| `chunksize`          | Number of records to process per chunk.                       |
+| `ftphost`            | SFTP server hostname.                                         |
+| `ftplogin`           | SFTP server login username.                                   |
+| `ftppass`            | SFTP server login password.                                   |
+| `remote_directory`   | Directory on the SFTP server where files will be uploaded.    |
+| `alwaysemail`        | Always send email notifications, even if there are no errors. |
+| `fromemail`          | Email address from which notifications will be sent.          |
+| `erroremaillist`     | Comma-separated list of email addresses to notify on error.   |
+| `successemaillist`   | Comma-separated list of email addresses to notify on success. |
 
 ## Usage
 
@@ -84,32 +92,36 @@ Run the script without any network operations (email, SFTP):
 
 ### Command Line Options
 
-- `--config`: Path to the configuration file (default: library_config.conf).
-- `--debug`: Enable debug mode for more verbose output.
-- `--full`: Perform a full dataset extraction.
-- `--no-email`: Disable email notifications.
-- `--no-sftp`: Disable SFTP file transfer.
+| Option       | Description                                                    |
+| ------------ | -------------------------------------------------------------- |
+| `--config`   | Path to the configuration file (default: library_config.conf). |
+| `--debug`    | Enable debug mode for more verbose output.                     |
+| `--full`     | Perform a full dataset extraction.                             |
+| `--no-email` | Disable email notifications.                                   |
+| `--no-sftp`  | Disable SFTP file transfer.                                    |
 
-## Modules
+## Perl Modules
 
-- **DB.pm**: Handles database connections and chunked queries.
-- **Email.pm**: Handles email notifications.
-- **Logging.pm**: Handles logging with timestamps.
-- **Queries.pm**: Contains SQL queries for fetching data.
-- **SFTP.pm**: Handles SFTP file transfers.
-- **Utils.pm**: Contains utility functions for reading configuration, tracking history, and processing data types.
+| Module         | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| **DB.pm**      | Handles database connections and chunked queries.                                                  |
+| **Email.pm**   | Handles email notifications.                                                                       |
+| **Logging.pm** | Handles logging with timestamps.                                                                   |
+| **Queries.pm** | Contains SQL queries for fetching data.                                                            |
+| **SFTP.pm**    | Handles SFTP file transfers.                                                                       |
+| **Utils.pm**   | Contains utility functions for reading configuration, tracking history, and processing data types. |
 
-## Example Workflow
+## Process Flow
 
-1. **Parse Config & CLI**: The script reads the configuration file and command-line options.
-2. **DB Connection**: Establishes a connection to the PostgreSQL database.
-3. **Determine Run Mode**: Checks the last run time to decide between full or incremental extraction.
-4. **Process Data Types**: For each data type (BIBs, Items, Circs, Patrons, Holds), it:
-    - Retrieves IDs in chunks.
-    - Fetches details for each chunk.
-    - Writes data to a file.
-5. **Update History**: Marks the last run time in the database.
-6. **SFTP Upload & Email**: Uploads the output files via SFTP and sends an email notification.
+```mermaid
+flowchart LR
+    A[Start] --> B[Setup]
+    B --> C[Process Data]
+    C --> D[Create tar.gz Archive]
+    D --> E[Send Email Notification]
+    E --> F[Update Last Run Time & Cleanup]
+    F --> G[Finish]
+```
 
 ## License
 
