@@ -124,7 +124,7 @@ sub get_data {
 
 sub process_datatype {
     my ($datatype, $id_sql, $detail_sql, $fields, @extra_params) = @_;
-    my @data = get_data($data_type, $id_sql, $detail_sql, @extra_params);
+    my @data = get_data($datatype, $id_sql, $detail_sql, @extra_params);
     return write_data_to_file($datatype, \@data, $fields, $conf->{tempdir});
 }
 
