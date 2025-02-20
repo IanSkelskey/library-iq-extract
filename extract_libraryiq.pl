@@ -105,12 +105,11 @@ logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 ###########################
 
 sub get_data {
-    my ($id_sql, $detail_sql, @extra_params) = @_;
+    my ($data_type, $id_sql, $detail_sql, @extra_params) = @_;
 
     # Get chunks of IDs based on the provided SQL query and date filter
     my @chunks = chunked_ids($dbh, $id_sql, $run_date_filter, $conf->{chunksize});
-	logmsg("INFO", "Found ".(scalar @chunks)." ID chunks for $id_sql");
-	logmsg("INFO", "Detail SQL: $detail_sql");
+    logmsg("INFO", "Found ".(scalar @chunks)." ID chunks for $data_type");
 
     my @data;
     # Process each chunk of IDs
@@ -125,7 +124,7 @@ sub get_data {
 
 sub process_datatype {
     my ($datatype, $id_sql, $detail_sql, $fields, @extra_params) = @_;
-    my @data = get_data($id_sql, $detail_sql, @extra_params);
+    my @data = get_data($data_type, $id_sql, $detail_sql, @extra_params);
     return write_data_to_file($datatype, \@data, $fields, $conf->{tempdir});
 }
 
