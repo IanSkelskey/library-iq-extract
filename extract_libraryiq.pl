@@ -96,7 +96,7 @@ logmsg("INFO", "Organization units: $pgLibs");
 ###########################
 # 5) Figure out last run vs full
 ###########################
-my $last_run_time = get_last_run_time($dbh, $conf, \&logmsg);
+my $last_run_time = get_last_run_time($dbh, $conf);
 my $run_date_filter = $full ? undef : $last_run_time;
 logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 
