@@ -124,3 +124,28 @@ flowchart LR
     E --> F[Update Last Run Time & Cleanup]
     F --> G[Finish]
 ```
+
+## Setting Up Cron Jobs
+
+To automate the extraction process, you can set up cron jobs to run the script at specified intervals. For example, you can run a full extract once per month and an incremental extract nightly.
+
+1. Open the crontab file for editing:
+    ```bash
+    crontab -e
+    ```
+
+2. Add the following lines to schedule the full extract to run at 2 AM on the first day of every month and the incremental extract to run at 2 AM every night:
+
+    ```bash
+    # Full extract on the first day of every month at 2 AM
+    0 2 1 * * /path/to/extract_libraryiq.pl --config /path/to/config/library_config.conf --full
+
+    # Incremental extract every night at 2 AM
+    0 2 * * * /path/to/extract_libraryiq.pl --config /path/to/config/library_config.conf
+    ```
+
+    Replace `/path/to/extract_libraryiq.pl` and `/path/to/config/library_config.conf` with the actual paths to your script and configuration file.
+
+3. Save and close the crontab file.
+
+These cron jobs will ensure that the full extract runs once a month and the incremental extract runs nightly, automating the data extraction process.
