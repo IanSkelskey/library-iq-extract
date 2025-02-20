@@ -109,7 +109,8 @@ sub get_data {
 
     # Get chunks of IDs based on the provided SQL query and date filter
     my @chunks = chunked_ids($dbh, $id_sql, $run_date_filter, $conf->{chunksize});
-    logmsg("INFO", "Found ".(scalar @chunks)." ID chunks");
+	logmsg("INFO", "Found ".(scalar @chunks)." ID chunks for $id_sql");
+	logmsg("INFO", "Detail SQL: $detail_sql");
 
     my @data;
     # Process each chunk of IDs
