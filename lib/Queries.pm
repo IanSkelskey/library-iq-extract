@@ -98,8 +98,10 @@ sub get_item_detail_sql {
               COALESCE(circcount.tcirccount, 0) as circ_count
        FROM asset.copy ac
        JOIN asset.call_number acn ON (acn.id=ac.call_number)
-       LEFT JOIN metabib.combined_identifier_field_entry i1 ON i1.record=acn.record AND i1.metabib_field=18
-       LEFT JOIN metabib.combined_identifier_field_entry i2 ON i2.record=acn.record AND i2.metabib_field=20
+       JOIN biblio.record_entry bre ON (bre.id=acn.record)
+       LEFT JOIN reporter.materialized_simple_record rmsr ON (rmsr.id = bre.id)
+       LEFT JOIN metabib.combined_identifier_field_entry i1 ON (i1.record=bre.id AND i1.metabib_field=18)
+       LEFT JOIN metabib.combined_identifier_field_entry i2 ON (i2.record=bre.id AND i2.metabib_field=20)
        LEFT JOIN asset.copy_location acl ON (acl.id=ac.location)
        JOIN actor.org_unit aou_owner ON (acn.owning_lib=aou_owner.id)
        JOIN actor.org_unit aou_circ ON (ac.circ_lib=aou_circ.id)

@@ -130,10 +130,11 @@ my $bib_out_file = process_datatype(
 
 # Process Items
 my $item_out_file = process_datatype(
-	'items',
-	get_item_ids_sql($full, $pgLibs),
-	get_item_detail_sql(),
-	[qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/]
+    'items',
+    get_item_ids_sql($full, $pgLibs),
+    get_item_detail_sql(),
+    [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/],
+    $full ? () : ($last_run_time, $last_run_time)
 );
 
 # Process Circs
