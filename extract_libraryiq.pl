@@ -146,28 +146,30 @@ my $item_out_file = process_datatype(
 
 # Process Circs
 my $circ_out_file = process_datatype(
-	'circs',
-	get_circ_ids_sql($full, $pgLibs),
-	get_circ_detail_sql(),
-	[qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_date/]
+    'circs',
+    get_circ_ids_sql($full, $pgLibs),
+    get_circ_detail_sql(),
+    [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_time/],
+    $full ? () : ($last_run_time)
 );
 
 # Process Patrons
 my $patron_out_file = process_datatype(
-	'patrons',
-	get_patron_ids_sql($full, $pgLibs),
-	get_patron_detail_sql(),
-	[qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/]
+    'patrons',
+    get_patron_ids_sql($full, $pgLibs),
+    get_patron_detail_sql(),
+    [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/],
+    $full ? () : ($last_run_time, $last_run_time)
 );
 
 # Process Holds
 my $hold_out_file = process_datatype(
-	'holds',
-	get_hold_ids_sql($full, $pgLibs),
-	get_hold_detail_sql(),
-	[qw/bibrecordid pickup_lib shortname/]
+    'holds',
+    get_hold_ids_sql($full, $pgLibs),
+    get_hold_detail_sql(),
+    [qw/bibrecordid pickup_lib shortname/],
+    $full ? () : ($last_run_time)
 );
-
 ###########################
 # 7) Create tar.gz archive
 ###########################

@@ -174,13 +174,14 @@ sub get_circ_detail_sql {
               au.id as patron_id,
               acirc.due_date,
               acirc.checkin_time
-       FROM action.all_circulation acirc
+       FROM action.circulation acirc
        JOIN asset.copy ac ON (ac.id=acirc.target_copy)
        JOIN asset.call_number acn ON (acn.id=ac.call_number AND NOT ac.deleted AND NOT acn.deleted)
        LEFT JOIN asset.copy_location acl ON (acl.id=ac.location)
        JOIN actor.usr au ON (acirc.usr=au.id)
        JOIN actor.org_unit aou_circ ON (acirc.circ_lib=aou_circ.id)
        WHERE acirc.id IN (:id_list)
+       AND acirc.xact_start > ?
     };
 }
 
@@ -226,6 +227,7 @@ sub get_patron_detail_sql {
        LEFT JOIN LATERAL (SELECT auadd.street1,auadd.street2,auadd.city,auadd.state,auadd.post_code FROM actor.usr_address auadd
                           WHERE  auadd.id=(SELECT MAX(id) FROM actor.usr_address WHERE actor.usr_address.usr=au.id  )) aid ON 1=1
        WHERE au.id IN (:id_list)
+       AND (au.create_date > ? OR au.last_update_time > ? OR au.last_update_time IS NULL)
     };
 }
 
@@ -271,6 +273,7 @@ sub get_hold_detail_sql {
                   JOIN asset.copy_part_map acp2 ON acp2.target_copy=ac2.id) acp_hold ON(ahr.target=acp_hold.id AND ahr.hold_type='P')
        LEFT JOIN metabib.metarecord mmr ON(mmr.id=ahr.target AND ahr.hold_type='M')
        WHERE ahr.id IN (:id_list)
+       AND (ahr.request_time > ?)
     };
 }
 
