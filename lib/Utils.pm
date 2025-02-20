@@ -139,8 +139,9 @@ sub write_data_to_file {
     # Close the output file
     close $OUT;
 
-    # Log the completion of the data writing process
-    logmsg("INFO", "Wrote $type data to $out_file");
+    # Log the completion of the data writing process and file size
+    my $file_size = -s $out_file;
+    logmsg("INFO", "Wrote $type data to $out_file (File size: $file_size bytes)");
 
     return $out_file;
 }
