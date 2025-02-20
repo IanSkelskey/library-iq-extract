@@ -38,21 +38,22 @@ sub get_bib_ids_sql {
 # ----------------------------------------------------------
 sub get_bib_detail_sql {
     return q{
-       SELECT bre.id,
-              i1.index_vector as isbn,
-              i2.index_vector as upc,
-              c.value as MatType,
-              rmsr.pubdate,
-              rmsr.publisher,
-              rmsr.title,
-              rmsr.author
-       FROM biblio.record_entry bre
-       JOIN reporter.materialized_simple_record rmsr ON rmsr.id = bre.id
-       LEFT JOIN metabib.combined_identifier_field_entry i1 ON i1.record=bre.id AND i1.metabib_field=18
-       LEFT JOIN metabib.combined_identifier_field_entry i2 ON i2.record=bre.id AND i2.metabib_field=20
-       LEFT JOIN metabib.record_attr_vector_list v ON v.source=bre.id
-       LEFT JOIN config.coded_value_map c ON c.id = ANY (v.vlist) AND ctype='icon_format'
-       WHERE bre.id IN (:id_list)
+        SELECT bre.id,
+               i1.index_vector as isbn,
+               i2.index_vector as upc,
+               c.value as MatType,
+               rmsr.pubdate,
+               rmsr.publisher,
+               rmsr.title,
+               rmsr.author
+        FROM biblio.record_entry bre
+        JOIN reporter.materialized_simple_record rmsr ON rmsr.id = bre.id
+        LEFT JOIN metabib.combined_identifier_field_entry i1 ON i1.record=bre.id AND i1.metabib_field=18
+        LEFT JOIN metabib.combined_identifier_field_entry i2 ON i2.record=bre.id AND i2.metabib_field=20
+        LEFT JOIN metabib.record_attr_vector_list v ON v.source=bre.id
+        LEFT JOIN config.coded_value_map c ON c.id = ANY (v.vlist) AND ctype='icon_format'
+        WHERE bre.id IN (:id_list)
+        AND (bre.edit_date > ? OR bre.create_date > ?)
     };
 }
 

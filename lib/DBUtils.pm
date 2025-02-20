@@ -36,12 +36,13 @@ sub get_db_config {
     my ($evergreen_config_file) = @_;
     my $xml = XML::Simple->new;
     my $data = $xml->XMLin($evergreen_config_file);
+    my $db_settings = $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database};
     return {
-        db   => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{db},
-        host => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{host},
-        port => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{port},
-        user => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{user},
-        pass => $data->{default}->{apps}->{"open-ils.storage"}->{app_settings}->{databases}->{database}->{pw},
+        db   => $db_settings->{db},
+        host => $db_settings->{host},
+        port => $db_settings->{port},
+        user => $db_settings->{user},
+        pass => $db_settings->{pw},
     };
 }
 
@@ -85,16 +86,15 @@ sub chunked_ids {
 # fetch_data_by_ids - fetch actual data given an array of IDs
 # ----------------------------------------------------------
 sub fetch_data_by_ids {
-    my ($dbh, $id_chunk, $query) = @_;
+    my ($dbh, $id_chunk, $query, @extra_params) = @_;
     
-    # We’ll construct an array expression if needed, or you can do
-    # "IN (?,?,?)" approach in the query. For example:
+    # Construct the placeholders for the ID list
     my $placeholders = join(',', ('?') x @$id_chunk);
     my $sql = $query;
-    $sql =~ s/\:id_list/$placeholders/;  # a token in your query e.g. "WHERE bre.id IN (:id_list)"
+    $sql =~ s/:id_list/$placeholders/;  # Replace the :id_list token with the actual placeholders
 
     my $sth = $dbh->prepare($sql);
-    $sth->execute(@$id_chunk);
+    $sth->execute(@$id_chunk, @extra_params);
 
     my @rows;
     while (my $row = $sth->fetchrow_arrayref) {

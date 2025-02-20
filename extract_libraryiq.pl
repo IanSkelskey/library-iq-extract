@@ -91,35 +91,36 @@ logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 ###########################
 
 sub get_data {
-	my ($id_sql, $detail_sql) = @_;
+    my ($id_sql, $detail_sql, @extra_params) = @_;
 
-	# Get chunks of IDs based on the provided SQL query and date filter
-	my @chunks = chunked_ids($dbh, $id_sql, $run_date_filter, $conf->{chunksize});
-	logmsg("INFO", "Found ".(scalar @chunks)." ID chunks");
+    # Get chunks of IDs based on the provided SQL query and date filter
+    my @chunks = chunked_ids($dbh, $id_sql, $run_date_filter, $conf->{chunksize});
+    logmsg("INFO", "Found ".(scalar @chunks)." ID chunks");
 
-	my @data;
-	# Process each chunk of IDs
-	foreach my $chunk (@chunks) {
-		# Fetch data for the current chunk of IDs
-		my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql);
-		push @data, @rows;
-	}
+    my @data;
+    # Process each chunk of IDs
+    foreach my $chunk (@chunks) {
+        # Fetch data for the current chunk of IDs
+        my @rows = fetch_data_by_ids($dbh, $chunk, $detail_sql, @extra_params);
+        push @data, @rows;
+    }
 
-	return @data;
+    return @data;
 }
 
 sub process_datatype {
-	my ($datatype, $id_sql, $detail_sql, $fields) = @_;
-	my @data = get_data($id_sql, $detail_sql);
-	return write_data_to_file($datatype, \@data, $fields, $conf->{tempdir});
+    my ($datatype, $id_sql, $detail_sql, $fields, @extra_params) = @_;
+    my @data = get_data($id_sql, $detail_sql, @extra_params);
+    return write_data_to_file($datatype, \@data, $fields, $conf->{tempdir});
 }
 
 # Process BIBs
 my $bib_out_file = process_datatype(
-	'bibs',
-	get_bib_ids_sql($full, $pgLibs),
-	get_bib_detail_sql(),
-	[qw/id isbn upc mat_type pubdate publisher title author/]
+    'bibs',
+    get_bib_ids_sql($full, $pgLibs),
+    get_bib_detail_sql(),
+    [qw/id isbn upc mat_type pubdate publisher title author/],
+    $full ? () : ($last_run_time, $last_run_time)
 );
 
 # Process Items
@@ -184,16 +185,18 @@ my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenamep
 unless ($no_email) {
 	# Minimal email
 	my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
+	my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
+	my $body = "LibraryIQ Extract has completed.";
 	send_email(
 		$conf->{fromemail},
 		\@recipients,
-		"LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL"),
-		"LibraryIQ Extract has completed."
+		$subject,
+		$body
 	);
 	logmsg("INFO", "Email sent to: ".join(',', @recipients)
 		." from: ".$conf->{fromemail}
-		." with subject: LibraryIQ Extract - ".($full ? "FULL" : "INCREMENTAL")
-		." and body: LibraryIQ Extract has completed.");
+		." with subject: $subject"
+		." and body: $body");
 }
 
 ###########################
