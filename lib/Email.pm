@@ -29,11 +29,14 @@ sub send_email {
         body_str => $body
     );
 
+    my $success = 1;
     try {
         sendmail($email);
     } catch {
         logmsg("ERROR", "Failed to send email: $_");
+        $success = 0;
     };
+    return $success;
 }
 
 1;

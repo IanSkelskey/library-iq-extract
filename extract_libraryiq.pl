@@ -213,20 +213,23 @@ my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenamep
 # }
 
 unless ($no_email) {
-	# Minimal email
-	my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
-	my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
-	my $body = "LibraryIQ Extract has completed.";
-	send_email(
-		$conf->{fromemail},
-		\@recipients,
-		$subject,
-		$body
-	);
-	logmsg("INFO", "Email sent to: ".join(',', @recipients)
-		." from: ".$conf->{fromemail}
-		." with subject: $subject"
-		." and body: $body");
+    # Minimal email
+    my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
+    my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
+    my $body = "LibraryIQ Extract has completed.";
+    my $email_success = send_email(
+        $conf->{fromemail},
+        \@recipients,
+        $subject,
+        $body
+    );
+
+    if ($email_success) {
+        logmsg("INFO", "Email sent to: ".join(',', @recipients)
+            ." from: ".$conf->{fromemail}
+            ." with subject: $subject"
+            ." and body: $body");
+    }
 }
 
 ###########################
