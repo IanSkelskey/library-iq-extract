@@ -5,6 +5,8 @@ use warnings;
 use Email::MIME;
 use Email::Sender::Simple 'sendmail';
 use Exporter 'import';
+use Logging qw(logmsg);
+use Try::Tiny;
 
 our @EXPORT_OK = qw(send_email);
 
@@ -26,7 +28,12 @@ sub send_email {
         },
         body_str => $body
     );
-    sendmail($email);
+
+    try {
+        sendmail($email);
+    } catch {
+        logmsg("ERROR", "Failed to send email: $_");
+    };
 }
 
 1;
