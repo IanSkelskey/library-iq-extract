@@ -246,7 +246,11 @@ set_last_run_time($dbh, $conf);
 
 # Calculate the elapsed time
 my $elapsed_time = tv_interval($start_time);
+my $hours = int($elapsed_time / 3600);
+my $minutes = int(($elapsed_time % 3600) / 60);
+my $seconds = $elapsed_time % 60;
+my $formatted_time = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
 
-logheader("Finished Library IQ Extract\nin $elapsed_time seconds\nChunk size: $conf->{chunksize}");
+logheader("Finished Library IQ Extract\nin $formatted_time\nChunk size: $conf->{chunksize}");
 
 exit 0;
