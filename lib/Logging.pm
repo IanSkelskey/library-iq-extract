@@ -36,9 +36,16 @@ sub logheader {
     my ($header) = @_;
     my $width = 80;
     my $border = '*' x $width;
-    my $padding = ' ' x (($width - length($header) - 2) / 2);
-    my $formatted_header = "*$padding$header$padding*";
-    $formatted_header .= ' ' if length($formatted_header) < $width;
+
+    my @lines = split /\n/, $header;
+    my @formatted_lines;
+
+    foreach my $line (@lines) {
+        my $padding = ' ' x (($width - length($line) - 2) / 2);
+        my $formatted_line = "*$padding$line$padding*";
+        $formatted_line .= ' ' if length($formatted_line) < $width;
+        push @formatted_lines, $formatted_line;
+    }
 
     my $ts = _get_timestamp();
     my $timestamp = "[$ts]";
@@ -46,7 +53,7 @@ sub logheader {
     my $formatted_timestamp = "$timestamp_padding$timestamp$timestamp_padding";
     $formatted_timestamp .= ' ' if length($formatted_timestamp) < $width;
 
-    my $log_entry = "$border\n$formatted_header\n$formatted_timestamp\n$border\n";
+    my $log_entry = "$border\n" . join("\n", @formatted_lines) . "\n$formatted_timestamp\n$border\n";
     _write_log($log_entry);
 }
 
