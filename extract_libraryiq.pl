@@ -18,6 +18,7 @@
 
 use strict;
 use warnings;
+use Time::HiRes qw(gettimeofday tv_interval);
 # use File::Spec;
 # use XML::Simple;
 
@@ -27,21 +28,24 @@ use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last
 use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
 use Queries qw(
-	get_bib_ids_sql
-	get_bib_detail_sql
-	get_item_ids_sql
-	get_item_detail_sql
-	get_circ_ids_sql
-	get_circ_detail_sql
-	get_patron_ids_sql
-	get_patron_detail_sql
-	get_hold_ids_sql
-	get_hold_detail_sql
-	get_inhouse_ids_sql
-	get_inhouse_detail_sql
-	);
+    get_bib_ids_sql
+    get_bib_detail_sql
+    get_item_ids_sql
+    get_item_detail_sql
+    get_circ_ids_sql
+    get_circ_detail_sql
+    get_patron_ids_sql
+    get_patron_detail_sql
+    get_hold_ids_sql
+    get_hold_detail_sql
+    get_inhouse_ids_sql
+    get_inhouse_detail_sql
+    );
 
 use Utils qw(read_config read_cmd_args check_config check_cmd_args write_data_to_file create_tar_gz);
+
+# Capture the start time
+my $start_time = [gettimeofday];
 
 ###########################
 # 1) Parse Config & CLI
@@ -229,6 +233,8 @@ unless ($no_email) {
             ." from: ".$conf->{fromemail}
             ." with subject: $subject"
             ." and body: $body");
+    } else {
+        logmsg("ERROR", "Failed to send email. Check the configuration file. Continuing...");
     }
 }
 
@@ -238,6 +244,9 @@ unless ($no_email) {
 
 set_last_run_time($dbh, $conf);
 
-logheader("Finished Library IQ Extract");
+# Calculate the elapsed time
+my $elapsed_time = tv_interval($start_time);
+
+logheader("Finished Library IQ Extract\nin $elapsed_time seconds\nChunk size: $conf->{chunksize}");
 
 exit 0;
