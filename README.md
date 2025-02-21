@@ -28,6 +28,8 @@ This software extracts data from an Evergreen server and securely transfers the 
     ├── 🐪 Queries.pm
     ├── 🐪 SFTP.pm
     └── 🐪 Utils.pm
+📁 tmp/
+    ├── 📄 .gitkeep
 📄 .gitignore
 🐪 extract_libraryiq.pl
 📄 README.md
