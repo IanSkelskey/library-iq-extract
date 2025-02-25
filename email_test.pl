@@ -22,17 +22,27 @@ my $subject = 'Test Email from LibraryIQ Extract';
 my $html_body = <<"END_HTML";
 <html>
 <head>
-    <title>Test Email from LibraryIQ Extract</title>
+    <title>LibraryIQ Extract Report</title>
 </head>
 <body>
-    <p>This is a test email from the LibraryIQ Extract script.</p>
+    <p>LibraryIQ Extract has completed.</p>
     <p><strong>Details:</strong></p>
     <ul>
-        <li>Start Time: @{[scalar localtime]}</li>
-        <li>End Time: @{[scalar localtime]}</li>
+        <li>Start Time: Tue Feb 25 13:54:09 2025</li>
+        <li>End Time: Tue Feb 25 13:54:09 2025</li>
         <li>Elapsed Time: 00:00:00</li>
-        <li>Mode: TEST</li>
+        <li>Mode: FULL</li>
         <li>Chunk Size: 500</li>
+        <li>SFTP Error: None</li>
+    </ul>
+    <p><strong>Record Counts:</strong></p>
+    <ul>
+        <li>BIBs: 375</li>
+        <li>Items: 4782</li>
+        <li>Circs: 484</li>
+        <li>Patrons: 241</li>
+        <li>Holds: 263</li>
+        <li>Inhouse: 0</li>
     </ul>
     <p>Thank you,<br>LibraryIQ Extract Script</p>
 </body>
