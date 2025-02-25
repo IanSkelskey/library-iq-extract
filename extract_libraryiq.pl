@@ -54,7 +54,7 @@ my $start_time = [gettimeofday];
 logheader("Reading Configuration and CLI Arguments");
 
 # Read command line arguments
-my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp, $drop_history) = read_cmd_args();
+my ($config_file, $evergreen_config_file, $debug, $full, $no_email, $no_sftp, $drop_history, $no_update_history) = read_cmd_args();
 
 # Read and check configuration file
 my $conf = read_config($config_file);
@@ -100,7 +100,7 @@ logmsg("INFO", "Organization units: $pgLibs");
 ###########################
 # 5) Figure out last run vs full
 ###########################
-my $last_run_time = get_last_run_time($dbh, $conf);
+my $last_run_time = get_last_run_time($dbh, $org_units);
 my $run_date_filter = $full ? undef : $last_run_time;
 logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
 
@@ -243,7 +243,7 @@ unless ($no_email) {
 ###########################
 
 unless ($no_update_history) {
-    set_last_run_time($dbh, $conf);
+    set_last_run_time($dbh, $org_units);
 }
 
 # Calculate the elapsed time

@@ -195,14 +195,14 @@ sub get_org_descendants {
 # get_last_run_time - Get the last run time from the database
 # ----------------------------------------------------------
 sub get_last_run_time {
-    my ($dbh, $c) = @_;
-    # You can store last run in a dedicated table, or read from a file, etc.
-    my $sql = "SELECT last_run FROM libraryiq.history WHERE key=? LIMIT 1";
+    my ($dbh, $org_units) = @_;
+    my $placeholders = join(',', ('?') x @$org_units);
+    my $sql = "SELECT MAX(last_run) FROM libraryiq.history WHERE key IN ($placeholders)";
     my $sth = $dbh->prepare($sql);
-    $sth->execute($c->{librarynames});
+    $sth->execute(@$org_units);
     if (my ($ts) = $sth->fetchrow_array) {
         $sth->finish;
-        return $ts; # e.g. '2025-01-01'
+        return $ts || '1900-01-01'; # Return '1900-01-01' if no timestamp found
     } else {
         $sth->finish;
         logmsg("INFO", "No existing entry. Using old date -> 1900-01-01");
@@ -214,20 +214,22 @@ sub get_last_run_time {
 # set_last_run_time - Set the last run time in the database
 # ----------------------------------------------------------
 sub set_last_run_time {
-    my ($dbh, $c) = @_;
+    my ($dbh, $org_units) = @_;
     my $sql_upd = q{
       UPDATE libraryiq.history SET last_run=now() WHERE key=?
     };
     my $sth_upd = $dbh->prepare($sql_upd);
-    my $rows = $sth_upd->execute($c->{librarynames});
-    if ($rows == 0) {
-      # Might need an INSERT if row does not exist
-      my $sql_ins = q{
-        INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
-      };
-      $dbh->do($sql_ins, undef, $c->{librarynames});
+    foreach my $org_unit (@$org_units) {
+        my $rows = $sth_upd->execute($org_unit);
+        if ($rows == 0) {
+            # Might need an INSERT if row does not exist
+            my $sql_ins = q{
+              INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
+            };
+            $dbh->do($sql_ins, undef, $org_unit);
+        }
     }
-    logmsg("INFO", "Updated last_run time for key=$c->{librarynames}");
+    logmsg("INFO", "Updated last_run time for org units: " . join(', ', @$org_units));
 }
 
 1;
