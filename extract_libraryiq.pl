@@ -215,15 +215,64 @@ unless ($no_sftp) {
 
 unless ($no_email) {
     my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
-    my $body = "LibraryIQ Extract has completed.";
     my $alwaysemail = $conf->{alwaysemail};
+
+    # Generate the HTML body with record counts
+    my $html_body = <<"END_HTML";
+<html>
+<head>
+    <title>LibraryIQ Extract Report</title>
+</head>
+<body>
+    <p>LibraryIQ Extract has completed.</p>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li>Start Time: @{[scalar localtime($start_time->[0])]}</li>
+        <li>End Time: @{[scalar localtime]}</li>
+        <li>Elapsed Time: $formatted_time</li>
+        <li>Mode: @{[$full ? "FULL" : "INCREMENTAL"]}</li>
+        <li>Chunk Size: $conf->{chunksize}</li>
+        <li>SFTP Error: @{[$sftp_error ? $sftp_error : "None"]}</li>
+    </ul>
+    <p><strong>Record Counts:</strong></p>
+    <ul>
+        <li>BIBs: @{[scalar @bibs]}</li>
+        <li>Items: @{[scalar @items]}</li>
+        <li>Circs: @{[scalar @circs]}</li>
+        <li>Patrons: @{[scalar @patrons]}</li>
+        <li>Holds: @{[scalar @holds]}</li>
+        <li>Inhouse: @{[scalar @inhouse]}</li>
+    </ul>
+    <p>Thank you,<br>LibraryIQ Extract Script</p>
+</body>
+</html>
+END_HTML
 
     if ($sftp_error) {
         # Send failure email if there was an SFTP error
         my @error_recipients = split /,/, $conf->{erroremaillist};
         push @error_recipients, $alwaysemail;
         my $error_subject = "LibraryIQ Extract - FAILURE";
-        my $error_body = "LibraryIQ Extract encountered an error during SFTP upload: $sftp_error";
+        my $error_body = <<"END_HTML";
+<html>
+<head>
+    <title>LibraryIQ Extract Failure</title>
+</head>
+<body>
+    <p>LibraryIQ Extract encountered an error during SFTP upload: $sftp_error</p>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li>Start Time: @{[scalar localtime($start_time->[0])]}</li>
+        <li>End Time: @{[scalar localtime]}</li>
+        <li>Elapsed Time: $formatted_time</li>
+        <li>Mode: @{[$full ? "FULL" : "INCREMENTAL"]}</li>
+        <li>Chunk Size: $conf->{chunksize}</li>
+        <li>SFTP Error: $sftp_error</li>
+    </ul>
+    <p>Thank you,<br>LibraryIQ Extract Script</p>
+</body>
+</html>
+END_HTML
 
         my $email_error = send_email(
             $conf->{fromemail},
@@ -248,14 +297,14 @@ unless ($no_email) {
             $conf->{fromemail},
             \@success_recipients,
             $subject,
-            $body
+            $html_body
         );
 
         if ($email_success) {
             logmsg("INFO", "Success email sent to: ".join(',', @success_recipients)
                 ." from: ".$conf->{fromemail}
                 ." with subject: $subject"
-                ." and body: $body");
+                ." and body: $html_body");
         } else {
             logmsg("ERROR", "Failed to send success email. Check the configuration file. Continuing...");
         }
