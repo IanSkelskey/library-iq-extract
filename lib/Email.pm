@@ -14,7 +14,7 @@ our @EXPORT_OK = qw(send_email);
 # send_email - minimal example
 # ----------------------------------------------------------
 sub send_email {
-    my ($from, $to_ref, $subject, $body) = @_;
+    my ($from, $to_ref, $subject, $html_body) = @_;
     
     # Remove duplicate email addresses
     my %seen;
@@ -27,10 +27,11 @@ sub send_email {
             Subject => $subject,
         ],
         attributes => {
-            encoding => 'quoted-printable',
-            charset  => 'UTF-8',
+            content_type => "text/html",
+            charset      => "UTF-8",
+            encoding     => "quoted-printable",
         },
-        body_str => $body
+        body_str => $html_body,
     );
 
     my $success = 1;
