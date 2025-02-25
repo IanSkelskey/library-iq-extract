@@ -16,10 +16,14 @@ our @EXPORT_OK = qw(send_email);
 sub send_email {
     my ($from, $to_ref, $subject, $body) = @_;
     
+    # Remove duplicate email addresses
+    my %seen;
+    my @unique_recipients = grep { !$seen{$_}++ } @$to_ref;
+
     my $email = Email::MIME->create(
         header_str => [
             From    => $from,
-            To      => join(",", @$to_ref),
+            To      => join(",", @unique_recipients),
             Subject => $subject,
         ],
         attributes => {

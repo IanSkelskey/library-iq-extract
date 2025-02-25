@@ -44,8 +44,8 @@ sub check_config {
 
     my @reqs = (
         "logfile", "tempdir", "librarynames", "ftplogin",
-        "ftppass", "ftphost", "remote_directory", "emailsubjectline",
-        "archive", "transfermethod"
+        "ftppass", "ftphost", "remote_directory",
+        "archive"
     );
 
     my @missing = ();
@@ -70,12 +70,7 @@ sub check_config {
         logmsg("ERROR", $msg);
         die $msg;
     }
-
-    if ( lc $conf->{"transfermethod"} ne 'sftp' ) {
-        my $msg = "Transfer method: " . $conf->{"transfermethod"} . " is not supported\n";
-        logmsg("ERROR", $msg);
-        die $msg;
-    }
+    
 }
 
 # ----------------------------------------------------------
