@@ -35,7 +35,7 @@ sub send_email {
 
     my $success = 1;
     try {
-        sendmail($email);
+        $success = sendmail($email);
     } catch {
         my $error = $_;
         if ($error =~ /connection refused/i || $error =~ /could not connect/i) {
