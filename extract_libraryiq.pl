@@ -207,6 +207,13 @@ unless ($no_sftp) {
     }
 }
 
+# Calculate the elapsed time
+my $elapsed_time = tv_interval($start_time);
+my $hours = int($elapsed_time / 3600);
+my $minutes = int(($elapsed_time % 3600) / 60);
+my $seconds = $elapsed_time % 60;
+my $formatted_time = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+
 unless ($no_email) {
     my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
     my $alwaysemail = $conf->{alwaysemail};
@@ -311,13 +318,6 @@ END_HTML
 unless ($no_update_history || $sftp_error) {
     set_last_run_time($dbh, $org_units);
 }
-
-# Calculate the elapsed time
-my $elapsed_time = tv_interval($start_time);
-my $hours = int($elapsed_time / 3600);
-my $minutes = int(($elapsed_time % 3600) / 60);
-my $seconds = $elapsed_time % 60;
-my $formatted_time = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
 
 logheader("Finished Library IQ Extract\nin $formatted_time\nChunk size: $conf->{chunksize}\nSFTP Error: " . ($sftp_error ? $sftp_error : "None"));
 
