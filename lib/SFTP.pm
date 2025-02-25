@@ -4,14 +4,16 @@ use strict;
 use warnings;
 use Net::SFTP::Foreign;
 use Exporter 'import';
+use Logging qw(logmsg);  # Add this line to import the logger
 
 our @EXPORT_OK = qw(do_sftp_upload);
+
 
 # ----------------------------------------------------------
 # do_sftp_upload
 # ----------------------------------------------------------
 sub do_sftp_upload {
-    my ($host, $user, $pass, $remote_dir, $local_file, $logger) = @_;
+    my ($host, $user, $pass, $remote_dir, $local_file) = @_;
 
     # Net::SFTP::Foreign usage
     my $sftp = Net::SFTP::Foreign->new($host, user => $user, password => $pass);
@@ -23,17 +25,8 @@ sub do_sftp_upload {
     $sftp->put($local_file, $remote_path)
         or return "SFTP upload of $local_file failed: " . $sftp->error;
 
-    $logger->("SFTP uploaded $local_file to $remote_path") if $logger;
+    logmsg("INFO", "SFTP uploaded $local_file to $remote_path");
     return '';  # success => empty error message
-}
-
-# ----------------------------------------------------------
-# _basename - local helper
-# ----------------------------------------------------------
-sub _basename {
-    my ($path) = @_;
-    $path =~ s!^.*/!!;  # remove directories
-    return $path;
 }
 
 1;

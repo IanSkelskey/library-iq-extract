@@ -19,12 +19,10 @@
 use strict;
 use warnings;
 use Time::HiRes qw(gettimeofday tv_interval);
-# use File::Spec;
-# use XML::Simple;
 
 use lib 'lib';  # or the path to your local modules
 use DBUtils qw(get_dbh get_db_config create_history_table get_org_units get_last_run_time set_last_run_time chunked_ids fetch_data_by_ids drop_schema);
-# use SFTP qw(do_sftp_upload);
+use SFTP qw(do_sftp_upload);
 use Email qw(send_email);
 use Logging qw(init_logging logmsg logheader);
 use Queries qw(
@@ -195,46 +193,69 @@ my $inhouse_out_file = process_datatype(
 my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file, $inhouse_out_file);
 my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
 
-# ###########################
-# # 8) SFTP upload & Email
-# ###########################
-# my $sftp_error;
-# unless ($no_sftp) {
-#     $sftp_error = do_sftp_upload(
-#         $conf->{ftphost}, 
-#         $conf->{ftplogin}, 
-#         $conf->{ftppass}, 
-#         $conf->{remote_directory}, 
-#         $tar_file,
-#         sub { logmsg($_[0], $log_file, $debug) }
-#     );
+###########################
+# 8) SFTP upload & Email
+###########################
+my $sftp_error;
+unless ($no_sftp) {
+    $sftp_error = do_sftp_upload(
+        $conf->{ftphost}, 
+        $conf->{ftplogin}, 
+        $conf->{ftppass}, 
+        $conf->{remote_directory}, 
+        $tar_file
+    );
 
-#     if ($sftp_error) {
-#         logmsg("SFTP ERROR: $sftp_error", $log_file, $debug);
-#     } else {
-#         logmsg("SFTP success", $log_file, $debug);
-#     }
-# }
+    if ($sftp_error) {
+        logmsg("ERROR", "SFTP ERROR: $sftp_error");
+    } else {
+        logmsg("SUCCESS", "SFTP success");
+    }
+}
 
 unless ($no_email) {
-    # Minimal email
-    my @recipients = split /,/, $conf->{alwaysemail};  # or success/fail lists
     my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
     my $body = "LibraryIQ Extract has completed.";
+
+    # Send success email
+    my @success_recipients = split /,/, $conf->{successemaillist};
     my $email_success = send_email(
         $conf->{fromemail},
-        \@recipients,
+        \@success_recipients,
         $subject,
         $body
     );
 
     if ($email_success) {
-        logmsg("INFO", "Email sent to: ".join(',', @recipients)
+        logmsg("INFO", "Success email sent to: ".join(',', @success_recipients)
             ." from: ".$conf->{fromemail}
             ." with subject: $subject"
             ." and body: $body");
     } else {
-        logmsg("ERROR", "Failed to send email. Check the configuration file. Continuing...");
+        logmsg("ERROR", "Failed to send success email. Check the configuration file. Continuing...");
+    }
+
+    # Send failure email if there was an SFTP error
+    if ($sftp_error) {
+        my @error_recipients = split /,/, $conf->{erroremaillist};
+        my $error_subject = "LibraryIQ Extract - FAILURE";
+        my $error_body = "LibraryIQ Extract encountered an error during SFTP upload: $sftp_error";
+
+        my $email_error = send_email(
+            $conf->{fromemail},
+            \@error_recipients,
+            $error_subject,
+            $error_body
+        );
+
+        if ($email_error) {
+            logmsg("INFO", "Error email sent to: ".join(',', @error_recipients)
+                ." from: ".$conf->{fromemail}
+                ." with subject: $error_subject"
+                ." and body: $error_body");
+        } else {
+            logmsg("ERROR", "Failed to send error email. Check the configuration file. Continuing...");
+        }
     }
 }
 
