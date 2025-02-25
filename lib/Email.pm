@@ -37,7 +37,12 @@ sub send_email {
     try {
         sendmail($email);
     } catch {
-        logmsg("ERROR", "Failed to send email: $_");
+        my $error = $_;
+        if ($error =~ /connection refused/i || $error =~ /could not connect/i) {
+            logmsg("ERROR", "Failed to send email: Relay server not available");
+        } else {
+            logmsg("ERROR", "Failed to send email: $error");
+        }
         $success = 0;
     };
     return $success;
