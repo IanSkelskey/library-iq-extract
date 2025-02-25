@@ -242,7 +242,9 @@ unless ($no_email) {
 # 9) Update last run time & cleanup
 ###########################
 
-set_last_run_time($dbh, $conf);
+unless ($no_update_history) {
+    set_last_run_time($dbh, $conf);
+}
 
 # Calculate the elapsed time
 my $elapsed_time = tv_interval($start_time);
