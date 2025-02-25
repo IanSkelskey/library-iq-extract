@@ -41,6 +41,13 @@ sub logheader {
     my @formatted_lines;
 
     foreach my $line (@lines) {
+        while (length($line) > $width - 2) {
+            my $part = substr($line, 0, $width - 2, '');
+            my $padding = ' ' x (($width - length($part) - 2) / 2);
+            my $formatted_line = "*$padding$part$padding*";
+            $formatted_line .= ' ' if length($formatted_line) < $width;
+            push @formatted_lines, $formatted_line;
+        }
         my $padding = ' ' x (($width - length($line) - 2) / 2);
         my $formatted_line = "*$padding$line$padding*";
         $formatted_line .= ' ' if length($formatted_line) < $width;
