@@ -196,10 +196,10 @@ sub get_org_descendants {
 # ----------------------------------------------------------
 sub get_last_run_time {
     my ($dbh, $org_units) = @_;
-    my $placeholders = join(',', ('?') x @$org_units);
-    my $sql = "SELECT MAX(last_run) FROM libraryiq.history WHERE key IN ($placeholders)";
+    my $key = join(',', @$org_units);
+    my $sql = "SELECT last_run FROM libraryiq.history WHERE key = ?";
     my $sth = $dbh->prepare($sql);
-    $sth->execute(@$org_units);
+    $sth->execute($key);
     if (my ($ts) = $sth->fetchrow_array) {
         $sth->finish;
         return $ts || '1900-01-01'; # Return '1900-01-01' if no timestamp found
@@ -215,21 +215,20 @@ sub get_last_run_time {
 # ----------------------------------------------------------
 sub set_last_run_time {
     my ($dbh, $org_units) = @_;
+    my $key = join(',', @$org_units);
     my $sql_upd = q{
       UPDATE libraryiq.history SET last_run=now() WHERE key=?
     };
     my $sth_upd = $dbh->prepare($sql_upd);
-    foreach my $org_unit (@$org_units) {
-        my $rows = $sth_upd->execute($org_unit);
-        if ($rows == 0) {
-            # Might need an INSERT if row does not exist
-            my $sql_ins = q{
-              INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
-            };
-            $dbh->do($sql_ins, undef, $org_unit);
-        }
+    my $rows = $sth_upd->execute($key);
+    if ($rows == 0) {
+        # Might need an INSERT if row does not exist
+        my $sql_ins = q{
+          INSERT INTO libraryiq.history(key, last_run) VALUES(?, now())
+        };
+        $dbh->do($sql_ins, undef, $key);
     }
-    logmsg("INFO", "Updated last_run time for org units: " . join(', ', @$org_units));
+    logmsg("INFO", "Updated last_run time for org units: $key");
 }
 
 1;
