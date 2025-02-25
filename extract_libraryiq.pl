@@ -217,26 +217,8 @@ unless ($no_email) {
     my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
     my $body = "LibraryIQ Extract has completed.";
 
-    # Send success email
-    my @success_recipients = split /,/, $conf->{successemaillist};
-    my $email_success = send_email(
-        $conf->{fromemail},
-        \@success_recipients,
-        $subject,
-        $body
-    );
-
-    if ($email_success) {
-        logmsg("INFO", "Success email sent to: ".join(',', @success_recipients)
-            ." from: ".$conf->{fromemail}
-            ." with subject: $subject"
-            ." and body: $body");
-    } else {
-        logmsg("ERROR", "Failed to send success email. Check the configuration file. Continuing...");
-    }
-
-    # Send failure email if there was an SFTP error
     if ($sftp_error) {
+        # Send failure email if there was an SFTP error
         my @error_recipients = split /,/, $conf->{erroremaillist};
         my $error_subject = "LibraryIQ Extract - FAILURE";
         my $error_body = "LibraryIQ Extract encountered an error during SFTP upload: $sftp_error";
@@ -256,14 +238,31 @@ unless ($no_email) {
         } else {
             logmsg("ERROR", "Failed to send error email. Check the configuration file. Continuing...");
         }
+    } else {
+        # Send success email
+        my @success_recipients = split /,/, $conf->{successemaillist};
+        my $email_success = send_email(
+            $conf->{fromemail},
+            \@success_recipients,
+            $subject,
+            $body
+        );
+
+        if ($email_success) {
+            logmsg("INFO", "Success email sent to: ".join(',', @success_recipients)
+                ." from: ".$conf->{fromemail}
+                ." with subject: $subject"
+                ." and body: $body");
+        } else {
+            logmsg("ERROR", "Failed to send success email. Check the configuration file. Continuing...");
+        }
     }
 }
 
 ###########################
 # 9) Update last run time & cleanup
 ###########################
-
-unless ($no_update_history) {
+unless ($no_update_history || $sftp_error) {
     set_last_run_time($dbh, $org_units);
 }
 
@@ -274,6 +273,6 @@ my $minutes = int(($elapsed_time % 3600) / 60);
 my $seconds = $elapsed_time % 60;
 my $formatted_time = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
 
-logheader("Finished Library IQ Extract\nin $formatted_time\nChunk size: $conf->{chunksize}");
+logheader("Finished Library IQ Extract\nin $formatted_time\nChunk size: $conf->{chunksize}\nSFTP Error: " . ($sftp_error ? $sftp_error : "None"));
 
 exit 0;
