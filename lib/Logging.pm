@@ -42,7 +42,8 @@ sub logheader {
 
     foreach my $line (@lines) {
         while (length($line) > $width - 2) {
-            my $part = substr($line, 0, $width - 2, '');
+            my $part = substr($line, 0, rindex($line, ' ', $width - 2));
+            $line = substr($line, length($part) + 1);
             my $padding = ' ' x (($width - length($part) - 2) / 2);
             my $formatted_line = "*$padding$part$padding*";
             $formatted_line .= ' ' if length($formatted_line) < $width;

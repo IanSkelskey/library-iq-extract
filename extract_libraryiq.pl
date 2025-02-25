@@ -216,10 +216,12 @@ unless ($no_sftp) {
 unless ($no_email) {
     my $subject = "LibraryIQ Extract - " . ($full ? "FULL" : "INCREMENTAL");
     my $body = "LibraryIQ Extract has completed.";
+    my $alwaysemail = $conf->{alwaysemail};
 
     if ($sftp_error) {
         # Send failure email if there was an SFTP error
         my @error_recipients = split /,/, $conf->{erroremaillist};
+        push @error_recipients, $alwaysemail;
         my $error_subject = "LibraryIQ Extract - FAILURE";
         my $error_body = "LibraryIQ Extract encountered an error during SFTP upload: $sftp_error";
 
@@ -241,6 +243,7 @@ unless ($no_email) {
     } else {
         # Send success email
         my @success_recipients = split /,/, $conf->{successemaillist};
+        push @success_recipients, $alwaysemail;
         my $email_success = send_email(
             $conf->{fromemail},
             \@success_recipients,
