@@ -5,7 +5,6 @@ archive = archive
 
 # This needs to match actor.org_unit.shortname
 # comma separated list of branch/system shortnames, case insensitive
-
 librarynames = BR1, BR2, BR3, BR4
 
 # Include descendants?
@@ -13,15 +12,16 @@ librarynames = BR1, BR2, BR3, BR4
 include_org_descendants = 1
 
 # How much of the database to read per loop
-# too small will make this slow, too high will make it slow too
 chunksize = 500
 
-filenameprefix = library
+# Prefix for the output file(s)
+filenameprefix = consortium
 
-#
-#SFTP Server to drop off
-#
+# Compress the output file(s) into a tar.gz file
+# uncomment to enable
+# compressoutput = 1
 
+# SFTP Server to drop off
 ftphost = sample.com
 ftplogin = sample
 ftppass = sample

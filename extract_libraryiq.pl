@@ -185,7 +185,12 @@ my $inhouse_out_file = write_data_to_file('inhouse', \@inhouse, [qw/itemid barco
 # 7) Create tar.gz archive
 ###########################
 my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file, $inhouse_out_file);
-my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
+my $archive_file;
+if ($conf->{compressoutput}) {
+    $archive_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
+} else {
+    $archive_file = \@output_files;  # If not compressing, just pass the list of files
+}
 
 ###########################
 # 8) SFTP upload & Email
@@ -197,13 +202,13 @@ unless ($no_sftp) {
         $conf->{ftplogin}, 
         $conf->{ftppass}, 
         $conf->{remote_directory}, 
-        $tar_file
+        $archive_file
     );
 
     if ($sftp_error) {
-        logmsg("ERROR", "SFTP ERROR: $sftp_error");
+        logmsg("ERROR", "SFTP upload failed: $sftp_error");
     } else {
-        logmsg("SUCCESS", "SFTP success");
+        logmsg("SUCCESS", "SFTP upload successful");
     }
 }
 
