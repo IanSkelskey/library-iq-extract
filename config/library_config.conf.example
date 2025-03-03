@@ -7,6 +7,11 @@ archive = archive
 # comma separated list of branch/system shortnames, case insensitive
 librarynames = BR1, BR2, BR3, BR4
 
+# Temporal overlap for diff extraction
+# This means that the diff extracts will go back 3 days before the last run
+# This is to ensure that no data is missed in case of a missed run.
+diff_overlap_days = 3
+
 # Include descendants?
 # any value here is considered "yes"
 include_org_descendants = 1
