@@ -318,10 +318,10 @@ END_HTML
         );
 
         if ($email_success) {
-            logmsg("INFO", "Success email sent to: ".join(',', @success_recipients)
-                ." from: ".$conf->{fromemail}
-                ." with subject: $subject"
-                ." and body: $html_body");
+            logmsg("INFO", "Success email sent to: ".join(',', @success_recipients));
+            logmsg("DEBUG", "Email details - From: ".$conf->{fromemail}
+                .", Subject: $subject"
+                .", Body: $html_body");
         } else {
             logmsg("ERROR", "Failed to send success email. Check the configuration file. Continuing...");
         }

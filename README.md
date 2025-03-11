@@ -95,6 +95,12 @@ Run the script without any network operations (email, SFTP):
 ./extract_libraryiq.pl --config config/library_config.conf --no-email --no-sftp
 ```
 
+A common configuration I used for testing with libraryiq:
+
+```bash
+./extract_libraryiq.pl --config config/library_config.conf --full --debug --no-update-history
+```
+
 ### Command Line Options
 
 | Option                | Description                                                    |
