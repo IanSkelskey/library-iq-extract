@@ -24,6 +24,7 @@ sub init_logging {
 # ----------------------------------------------------------
 sub logmsg {
     my ($level, $msg) = @_;
+    return if $level eq 'DEBUG' && !$debug;  # Skip debug messages if debug is not enabled
     my $ts = _get_timestamp();
     my $log_entry = "[$ts] [$level] $msg\n";
     _write_log($log_entry);
