@@ -133,6 +133,11 @@ sub get_data {
 # Define a very old date for full runs
 my $very_old_date = '1900-01-01';
 
+my $prefix = $conf->{filenameprefix};
+my $dt = DateTime->now( time_zone => "local" );
+my $fdate = $dt->ymd;
+my $suffix = $full ? 'full' : 'diff';
+
 # Process BIBs
 my @bibs = get_data(
     'bibs',
@@ -140,7 +145,7 @@ my @bibs = get_data(
     get_bib_detail_sql(),
     $full ? ($very_old_date, $very_old_date) : ($run_date_filter, $run_date_filter)
 );
-my $bib_out_file = write_data_to_file('bibs', \@bibs, [qw/id isbn upc mat_type pubdate publisher title author/], $conf->{tempdir});
+my $bib_out_file = write_data_to_file("${prefix}_bibs_${fdate}_${suffix}", \@bibs, [qw/id isbn upc mat_type pubdate publisher title author/], $conf->{tempdir});
 
 # Process Items
 my @items = get_data(
@@ -149,7 +154,7 @@ my @items = get_data(
     get_item_detail_sql(),
     $full ? ($very_old_date, $very_old_date) : ($run_date_filter, $run_date_filter)
 );
-my $item_out_file = write_data_to_file('items', \@items, [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/], $conf->{tempdir});
+my $item_out_file = write_data_to_file("${prefix}_items_${fdate}_${suffix}", \@items, [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/], $conf->{tempdir});
 
 # Process Circs
 my @circs = get_data(
@@ -158,7 +163,7 @@ my @circs = get_data(
     get_circ_detail_sql(),
     $full ? ($very_old_date) : ($run_date_filter)
 );
-my $circ_out_file = write_data_to_file('circs', \@circs, [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_time/], $conf->{tempdir});
+my $circ_out_file = write_data_to_file("${prefix}_circs_${fdate}_${suffix}", \@circs, [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_time/], $conf->{tempdir});
 
 # Process Patrons
 my @patrons = get_data(
@@ -167,7 +172,7 @@ my @patrons = get_data(
     get_patron_detail_sql(),
     $full ? ($very_old_date, $very_old_date) : ($run_date_filter, $run_date_filter)
 );
-my $patron_out_file = write_data_to_file('patrons', \@patrons, [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/], $conf->{tempdir});
+my $patron_out_file = write_data_to_file("${prefix}_patrons_${fdate}_${suffix}", \@patrons, [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/], $conf->{tempdir});
 
 # Process Holds
 my @holds = get_data(
@@ -176,7 +181,7 @@ my @holds = get_data(
     get_hold_detail_sql(),
     $full ? ($very_old_date) : ($run_date_filter)
 );
-my $hold_out_file = write_data_to_file('holds', \@holds, [qw/bibrecordid pickup_lib shortname/], $conf->{tempdir});
+my $hold_out_file = write_data_to_file("${prefix}_holds_${fdate}_${suffix}", \@holds, [qw/bibrecordid pickup_lib shortname/], $conf->{tempdir});
 
 # Process Inhouse
 my @inhouse = get_data(
@@ -185,7 +190,7 @@ my @inhouse = get_data(
     get_inhouse_detail_sql(),
     $full ? ($very_old_date) : ($run_date_filter)
 );
-my $inhouse_out_file = write_data_to_file('inhouse', \@inhouse, [qw/itemid barcode bibid checkout_date checkout_branch/], $conf->{tempdir});
+my $inhouse_out_file = write_data_to_file("${prefix}_inhouse_${fdate}_${suffix}", \@inhouse, [qw/itemid barcode bibid checkout_date checkout_branch/], $conf->{tempdir});
 
 ###########################
 # 7) Create tar.gz archive
