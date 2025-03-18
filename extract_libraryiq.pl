@@ -337,4 +337,53 @@ unless ($no_update_history || $sftp_error) {
 
 logheader("Finished Library IQ Extract\nin $formatted_time\nChunk size: $conf->{chunksize}\nSFTP Error: " . ($sftp_error ? $sftp_error : "None"));
 
+###########################
+# 10) Cleanup Old Files
+###########################
+sub cleanup_old_files {
+    my ($directory, $prefix) = @_;
+    opendir(my $dh, $directory) or die "Cannot open directory $directory: $!";
+    my @files = grep { /^${prefix}_.*\.(tsv|tar\.gz)$/ && -f "$directory/$_" } readdir($dh);
+    closedir($dh);
+
+    my %files_by_type;
+    foreach my $file (@files) {
+        if ($file =~ /_full\./) {
+            push @{$files_by_type{full}}, $file;
+        } elsif ($file =~ /_diff\./) {
+            push @{$files_by_type{diff}}, $file;
+        }
+    }
+
+    foreach my $type (keys %files_by_type) {
+        my @sorted_files = sort { -M "$directory/$a" <=> -M "$directory/$b" } @{$files_by_type{$type}};
+        shift @sorted_files;  # Keep the most recent file
+        foreach my $old_file (@sorted_files) {
+            unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
+            logmsg("INFO", "Deleted old $type file: $old_file");
+        }
+    }
+}
+
+sub cleanup_temp_directory {
+    my ($directory) = @_;
+    opendir(my $dh, $directory) or die "Cannot open directory $directory: $!";
+    my @files = grep { -f "$directory/$_" } readdir($dh);
+    closedir($dh);
+
+    foreach my $file (@files) {
+        unlink("$directory/$file") or warn "Could not delete $directory/$file: $!";
+        logmsg("INFO", "Deleted temp file: $file");
+    }
+}
+
+# Perform cleanup
+if ($conf->{cleanup}) {
+    # Clean up the archive directory
+    cleanup_old_files($conf->{archive}, $conf->{filenameprefix});
+}
+
+# Ensure the temp directory is empty
+cleanup_temp_directory($conf->{tempdir});
+
 exit 0;
