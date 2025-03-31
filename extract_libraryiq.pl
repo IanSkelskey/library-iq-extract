@@ -352,30 +352,27 @@ sub cleanup_old_files {
     my @files = grep { /^${prefix}_.*\.(tsv|tar\.gz)$/ && -f "$directory/$_" } readdir($dh);
     closedir($dh);
 
-    # Group files by date and type (diff or full)
-    my %files_by_date_and_type;
+    # Group files by type (diff or full) and date
+    my %files_by_type_and_date;
     foreach my $file (@files) {
         if ($file =~ /_(\d{4}-\d{2}-\d{2})_(full|diff)\./) {
             my ($date, $type) = ($1, $2);
-            push @{$files_by_date_and_type{$date}{$type}}, $file;
+            push @{$files_by_type_and_date{$type}{$date}}, $file;
         }
     }
 
-    # Determine the most recent date for each type (full and diff)
-    my %most_recent_date_by_type;
-    foreach my $date (keys %files_by_date_and_type) {
-        foreach my $type (keys %{$files_by_date_and_type{$date}}) {
-            if (!exists $most_recent_date_by_type{$type} || $date gt $most_recent_date_by_type{$type}) {
-                $most_recent_date_by_type{$type} = $date;
-            }
-        }
+    # Determine the latest date for each type
+    my %latest_date_by_type;
+    foreach my $type (keys %files_by_type_and_date) {
+        my @dates = sort keys %{$files_by_type_and_date{$type}};
+        $latest_date_by_type{$type} = $dates[-1] if @dates;
     }
 
-    # Delete files not associated with the most recent date for each type
-    foreach my $date (keys %files_by_date_and_type) {
-        foreach my $type (keys %{$files_by_date_and_type{$date}}) {
-            next if $date eq $most_recent_date_by_type{$type};  # Skip the most recent date for this type
-            foreach my $old_file (@{$files_by_date_and_type{$date}{$type}}) {
+    # Delete files not associated with the latest date for each type
+    foreach my $type (keys %files_by_type_and_date) {
+        foreach my $date (keys %{$files_by_type_and_date{$type}}) {
+            next if $date eq $latest_date_by_type{$type};  # Skip the latest date for this type
+            foreach my $old_file (@{$files_by_type_and_date{$type}{$date}}) {
                 unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
                 logmsg("INFO", "Deleted old $type file from $date: $old_file");
             }
