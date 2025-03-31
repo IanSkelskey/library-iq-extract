@@ -65,6 +65,7 @@ Edit the `config/library_config.conf` file to set the appropriate values for you
 | `logfile`            | Path to the log file.                                         |
 | `tempdir`            | Temporary directory for storing intermediate files.           |
 | `archive`            | Directory for storing archived files.                         |
+| `cleanup`            | Whether to clean up the archive directory.                    |
 | `diff_overlap_days`  | Number of days to overlap when calculating incremental data.  |
 | `librarynames`       | Comma-separated list of branch/system shortnames.             |
 | `chunksize`          | Number of records to process per chunk.                       |

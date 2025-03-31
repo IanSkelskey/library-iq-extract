@@ -1,7 +1,16 @@
 logfile = libraryiq_export.log
 
+# Temporary directory to store the output files during processing
 tempdir = tmp
+
+# Directory to store the output files
 archive = archive
+
+# Whether to cleanup old archive files after processing.
+# If active, the script will only keep the latest diff and full extract files.
+# The tempdir will be cleaned up regardless of this setting.
+# This is useful for testing, but should be disabled in production.
+cleanup = 1
 
 # This needs to match actor.org_unit.shortname
 # comma separated list of branch/system shortnames, case insensitive
