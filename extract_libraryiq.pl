@@ -200,7 +200,13 @@ my $archive_file;
 if ($conf->{compressoutput}) {
     $archive_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
 } else {
-    $archive_file = \@output_files;  # If not compressing, just pass the list of files
+    # Move TSV files to the archive directory
+    foreach my $file (@output_files) {
+        my $destination = $conf->{archive} . '/' . (split('/', $file))[-1];
+        rename($file, $destination) or warn "Could not move $file to $destination: $!";
+        logmsg("INFO", "Moved $file to archive directory: $destination");
+    }
+    $archive_file = \@output_files;  # Keep track of the moved files
 }
 
 ###########################
