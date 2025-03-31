@@ -371,10 +371,11 @@ sub cleanup_old_files {
     # Delete files not associated with the latest date for each type
     foreach my $type (keys %files_by_type_and_date) {
         foreach my $date (keys %{$files_by_type_and_date{$type}}) {
-            next if $date eq $latest_date_by_type{$type};  # Skip the latest date for this type
-            foreach my $old_file (@{$files_by_type_and_date{$type}{$date}}) {
-                unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
-                logmsg("INFO", "Deleted old $type file from $date: $old_file");
+            if ($date ne $latest_date_by_type{$type}) {  # Only keep files from the latest date
+                foreach my $old_file (@{$files_by_type_and_date{$type}{$date}}) {
+                    unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
+                    logmsg("INFO", "Deleted old $type file from $date: $old_file");
+                }
             }
         }
     }
