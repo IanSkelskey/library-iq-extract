@@ -346,21 +346,27 @@ sub cleanup_old_files {
     my @files = grep { /^${prefix}_.*\.(tsv|tar\.gz)$/ && -f "$directory/$_" } readdir($dh);
     closedir($dh);
 
-    my %files_by_type;
+    # Group files by date and type (diff or full)
+    my %files_by_date_and_type;
     foreach my $file (@files) {
-        if ($file =~ /_full\./) {
-            push @{$files_by_type{full}}, $file;
-        } elsif ($file =~ /_diff\./) {
-            push @{$files_by_type{diff}}, $file;
+        if ($file =~ /_(\d{4}-\d{2}-\d{2})_(full|diff)\./) {
+            my ($date, $type) = ($1, $2);
+            push @{$files_by_date_and_type{$date}{$type}}, $file;
         }
     }
 
-    foreach my $type (keys %files_by_type) {
-        my @sorted_files = sort { -M "$directory/$a" <=> -M "$directory/$b" } @{$files_by_type{$type}};
-        shift @sorted_files;  # Keep the most recent file
-        foreach my $old_file (@sorted_files) {
-            unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
-            logmsg("INFO", "Deleted old $type file: $old_file");
+    # Determine the most recent date
+    my @dates = sort keys %files_by_date_and_type;
+    my $most_recent_date = $dates[-1];
+
+    # Delete files not associated with the most recent date
+    foreach my $date (keys %files_by_date_and_type) {
+        next if $date eq $most_recent_date;  # Skip the most recent date
+        foreach my $type (keys %{$files_by_date_and_type{$date}}) {
+            foreach my $old_file (@{$files_by_date_and_type{$date}{$type}}) {
+                unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
+                logmsg("INFO", "Deleted old $type file from $date: $old_file");
+            }
         }
     }
 }
