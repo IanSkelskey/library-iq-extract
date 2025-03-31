@@ -361,14 +361,20 @@ sub cleanup_old_files {
         }
     }
 
-    # Determine the most recent date
-    my @dates = sort keys %files_by_date_and_type;
-    my $most_recent_date = $dates[-1];
-
-    # Delete files not associated with the most recent date
+    # Determine the most recent date for each type (full and diff)
+    my %most_recent_date_by_type;
     foreach my $date (keys %files_by_date_and_type) {
-        next if $date eq $most_recent_date;  # Skip the most recent date
         foreach my $type (keys %{$files_by_date_and_type{$date}}) {
+            if (!exists $most_recent_date_by_type{$type} || $date gt $most_recent_date_by_type{$type}) {
+                $most_recent_date_by_type{$type} = $date;
+            }
+        }
+    }
+
+    # Delete files not associated with the most recent date for each type
+    foreach my $date (keys %files_by_date_and_type) {
+        foreach my $type (keys %{$files_by_date_and_type{$date}}) {
+            next if $date eq $most_recent_date_by_type{$type};  # Skip the most recent date for this type
             foreach my $old_file (@{$files_by_date_and_type{$date}{$type}}) {
                 unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
                 logmsg("INFO", "Deleted old $type file from $date: $old_file");
