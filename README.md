@@ -31,6 +31,8 @@ This software extracts data from an Evergreen server and securely transfers the 
 📁 tmp/
     ├── 📄 .gitkeep
 📄 .gitignore
+🐪 email_test.pl
+🐪 sftp_test.pl
 🐪 extract_libraryiq.pl
 📄 README.md
 ```
@@ -63,6 +65,8 @@ Edit the `config/library_config.conf` file to set the appropriate values for you
 | `logfile`            | Path to the log file.                                         |
 | `tempdir`            | Temporary directory for storing intermediate files.           |
 | `archive`            | Directory for storing archived files.                         |
+| `cleanup`            | Whether to clean up the archive directory.                    |
+| `diff_overlap_days`  | Number of days to overlap when calculating incremental data.  |
 | `librarynames`       | Comma-separated list of branch/system shortnames.             |
 | `chunksize`          | Number of records to process per chunk.                       |
 | `ftphost`            | SFTP server hostname.                                         |
@@ -92,6 +96,12 @@ Run the script without any network operations (email, SFTP):
 
 ```bash
 ./extract_libraryiq.pl --config config/library_config.conf --no-email --no-sftp
+```
+
+A common configuration I used for testing with libraryiq:
+
+```bash
+./extract_libraryiq.pl --config config/library_config.conf --full --debug --no-update-history
 ```
 
 ### Command Line Options
@@ -127,6 +137,57 @@ flowchart LR
     D --> E[Send Email Notification]
     E --> F[Update Last Run Time & Cleanup]
     F --> G[Finish]
+```
+
+## Cleanup Strategy
+
+The script includes a robust cleanup strategy to manage the files generated during its execution. This ensures that disk space is conserved and only the most relevant files are retained.
+
+### Files Created
+
+1. **Temporary Files**:
+   - Intermediate files (e.g., TSV files) are created in the directory specified by the `tempdir` configuration option.
+   - These files are used during the processing of data and are deleted after the script completes.
+
+2. **Archived Files**:
+   - Final output files (e.g., compressed `.tar.gz` archives or raw `.tsv` files) are stored in the directory specified by the `archive` configuration option.
+   - These files are retained for future reference or manual re-upload if needed.
+
+### Cleanup Process
+
+1. **Temporary Directory (`tempdir`)**:
+   - All files in the `tempdir` are deleted after the script completes, regardless of success or failure.
+   - This ensures that the temporary directory is always empty after the script runs.
+
+2. **Archive Directory (`archive`)**:
+   - The script retains only the most recent **full extract** and the most recent **diff extract** in the archive directory.
+   - Older files are automatically deleted to conserve disk space.
+
+### Warning: Temporary Directory Deletion
+
+**Important**: The directory specified in the `tempdir` configuration is completely emptied after every run of the script. This means that **all files in this directory will be deleted**, regardless of whether they were created by the script or not.
+
+To avoid accidental data loss:
+- Leave the `tempdir` configuration as the default relative directory (`tmp`).
+- If you need to change it, ensure that the directory is dedicated solely to this script's temporary files.
+
+### Example Configuration
+
+Here is an example configuration for the `tempdir` and `archive` options:
+
+```plaintext
+tempdir = tmp
+archive = archive
+```
+
+- `tempdir`: Temporary files will be stored in the `tmp` directory relative to the script's location.
+- `archive`: Final output files will be stored in the `archive` directory relative to the script's location.
+
+If you need to use absolute paths, ensure that the `tempdir` points to a dedicated directory:
+
+```plaintext
+tempdir = /path/to/dedicated/tempdir
+archive = /path/to/archive
 ```
 
 ## Setting Up Cron Jobs

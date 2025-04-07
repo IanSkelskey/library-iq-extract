@@ -45,7 +45,7 @@ sub check_config {
     my @reqs = (
         "logfile", "tempdir", "librarynames", "ftplogin",
         "ftppass", "ftphost", "remote_directory",
-        "archive"
+        "archive", "diff_overlap_days"
     );
 
     my @missing = ();
@@ -59,6 +59,13 @@ sub check_config {
         logmsg("ERROR", $msg);
         die $msg;
     }
+
+    if ( !defined $conf->{"diff_overlap_days"} || $conf->{"diff_overlap_days"} !~ /^\d+$/ ) {
+        my $msg = "Please specify a valid number for diff_overlap_days in the configuration.\nLibrary IQ recommends 3 days in case of missed runs.\n";
+        logmsg("ERROR", $msg);
+        die $msg;
+    }
+
     if ( !-e $conf->{"tempdir"} ) {
         my $msg = "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
         logmsg("ERROR", $msg);

@@ -99,8 +99,14 @@ logmsg("INFO", "Organization units: $pgLibs");
 # 5) Figure out last run vs full
 ###########################
 my $last_run_time = get_last_run_time($dbh, $org_units);
-my $run_date_filter = $full ? undef : $last_run_time;
-logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $last_run_time"));
+
+# Calculate the overlap period
+my $diff_overlap_days = $conf->{diff_overlap_days} || 0;
+my $overlap_date = DateTime->now->subtract(days => $diff_overlap_days)->ymd;
+
+my $run_date_filter = $full ? undef : $overlap_date;
+logheader("Run mode: " . ($full ? "FULL" : "INCREMENTAL from $overlap_date"));
+
 
 ###########################
 # 6) Process Data Types
@@ -127,65 +133,81 @@ sub get_data {
 # Define a very old date for full runs
 my $very_old_date = '1900-01-01';
 
+my $prefix = $conf->{filenameprefix};
+my $dt = DateTime->now( time_zone => "local" );
+my $fdate = $dt->ymd;
+my $suffix = $full ? 'full' : 'diff';
+
 # Process BIBs
 my @bibs = get_data(
     'bibs',
     get_bib_ids_sql($full, $pgLibs),
     get_bib_detail_sql(),
-    $full ? ($very_old_date, $very_old_date) : ($last_run_time, $last_run_time)
+    $full ? ($very_old_date, $very_old_date) : ($run_date_filter, $run_date_filter)
 );
-my $bib_out_file = write_data_to_file('bibs', \@bibs, [qw/id isbn upc mat_type pubdate publisher title author/], $conf->{tempdir});
+my $bib_out_file = write_data_to_file("${prefix}_bibs_${fdate}_${suffix}", \@bibs, [qw/id isbn upc mat_type pubdate publisher title author/], $conf->{tempdir});
 
 # Process Items
 my @items = get_data(
     'items',
     get_item_ids_sql($full, $pgLibs),
     get_item_detail_sql(),
-    $full ? ($very_old_date, $very_old_date) : ($last_run_time, $last_run_time)
+    $full ? ($very_old_date, $very_old_date) : ($run_date_filter, $run_date_filter)
 );
-my $item_out_file = write_data_to_file('items', \@items, [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/], $conf->{tempdir});
+my $item_out_file = write_data_to_file("${prefix}_items_${fdate}_${suffix}", \@items, [qw/itemid barcode isbn upc bibid collection_code mattype branch_location owning_location call_number shelf_location create_date status last_checkout last_checkin due_date ytd_circ_count circ_count/], $conf->{tempdir});
 
 # Process Circs
 my @circs = get_data(
     'circs',
     get_circ_ids_sql($full, $pgLibs),
     get_circ_detail_sql(),
-    $full ? ($very_old_date) : ($last_run_time)
+    $full ? ($very_old_date) : ($run_date_filter)
 );
-my $circ_out_file = write_data_to_file('circs', \@circs, [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_time/], $conf->{tempdir});
+my $circ_out_file = write_data_to_file("${prefix}_circs_${fdate}_${suffix}", \@circs, [qw/itemid barcode bibid checkout_date checkout_branch patron_id due_date checkin_time/], $conf->{tempdir});
 
 # Process Patrons
 my @patrons = get_data(
     'patrons',
     get_patron_ids_sql($full, $pgLibs),
     get_patron_detail_sql(),
-    $full ? ($very_old_date, $very_old_date) : ($last_run_time, $last_run_time)
+    $full ? ($very_old_date, $very_old_date) : ($run_date_filter, $run_date_filter)
 );
-my $patron_out_file = write_data_to_file('patrons', \@patrons, [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/], $conf->{tempdir});
+my $patron_out_file = write_data_to_file("${prefix}_patrons_${fdate}_${suffix}", \@patrons, [qw/id expire_date shortname create_date patroncode status ytd_circ_count prev_year_circ_count total_circ_count last_activity last_checkout street1 street2 city state post_code/], $conf->{tempdir});
 
 # Process Holds
 my @holds = get_data(
     'holds',
     get_hold_ids_sql($full, $pgLibs),
     get_hold_detail_sql(),
-    $full ? ($very_old_date) : ($last_run_time)
+    $full ? ($very_old_date) : ($run_date_filter)
 );
-my $hold_out_file = write_data_to_file('holds', \@holds, [qw/bibrecordid pickup_lib shortname/], $conf->{tempdir});
+my $hold_out_file = write_data_to_file("${prefix}_holds_${fdate}_${suffix}", \@holds, [qw/bibrecordid pickup_lib shortname/], $conf->{tempdir});
 
 # Process Inhouse
 my @inhouse = get_data(
     'inhouse',
     get_inhouse_ids_sql($full, $pgLibs),
     get_inhouse_detail_sql(),
-    $full ? ($very_old_date) : ($last_run_time)
+    $full ? ($very_old_date) : ($run_date_filter)
 );
-my $inhouse_out_file = write_data_to_file('inhouse', \@inhouse, [qw/itemid barcode bibid checkout_date checkout_branch/], $conf->{tempdir});
+my $inhouse_out_file = write_data_to_file("${prefix}_inhouse_${fdate}_${suffix}", \@inhouse, [qw/itemid barcode bibid checkout_date checkout_branch/], $conf->{tempdir});
 
 ###########################
 # 7) Create tar.gz archive
 ###########################
 my @output_files = ($bib_out_file, $item_out_file, $circ_out_file, $patron_out_file, $hold_out_file, $inhouse_out_file);
-my $tar_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
+my $archive_file;
+if ($conf->{compressoutput}) {
+    $archive_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
+} else {
+    # Move TSV files to the archive directory
+    foreach my $file (@output_files) {
+        my $destination = $conf->{archive} . '/' . (split('/', $file))[-1];
+        rename($file, $destination) or warn "Could not move $file to $destination: $!";
+        logmsg("INFO", "Moved $file to archive directory: $destination");
+    }
+    $archive_file = \@output_files;  # Keep track of the moved files
+}
 
 ###########################
 # 8) SFTP upload & Email
@@ -197,13 +219,13 @@ unless ($no_sftp) {
         $conf->{ftplogin}, 
         $conf->{ftppass}, 
         $conf->{remote_directory}, 
-        $tar_file
+        $archive_file
     );
 
     if ($sftp_error) {
-        logmsg("ERROR", "SFTP ERROR: $sftp_error");
+        logmsg("ERROR", "SFTP upload failed: $sftp_error");
     } else {
-        logmsg("SUCCESS", "SFTP success");
+        logmsg("SUCCESS", "SFTP upload successful");
     }
 }
 
@@ -302,10 +324,10 @@ END_HTML
         );
 
         if ($email_success) {
-            logmsg("INFO", "Success email sent to: ".join(',', @success_recipients)
-                ." from: ".$conf->{fromemail}
-                ." with subject: $subject"
-                ." and body: $html_body");
+            logmsg("INFO", "Success email sent to: ".join(',', @success_recipients));
+            logmsg("DEBUG", "Email details - From: ".$conf->{fromemail}
+                .", Subject: $subject"
+                .", Body: $html_body");
         } else {
             logmsg("ERROR", "Failed to send success email. Check the configuration file. Continuing...");
         }
@@ -320,5 +342,64 @@ unless ($no_update_history || $sftp_error) {
 }
 
 logheader("Finished Library IQ Extract\nin $formatted_time\nChunk size: $conf->{chunksize}\nSFTP Error: " . ($sftp_error ? $sftp_error : "None"));
+
+###########################
+# 10) Cleanup Old Files
+###########################
+sub cleanup_old_files {
+    my ($directory, $prefix) = @_;
+    opendir(my $dh, $directory) or die "Cannot open directory $directory: $!";
+    my @files = grep { /^${prefix}_.*\.(tsv|tar\.gz)$/ && -f "$directory/$_" } readdir($dh);
+    closedir($dh);
+
+    # Group files by type (diff or full) and date
+    my %files_by_type_and_date;
+    foreach my $file (@files) {
+        if ($file =~ /_(\d{4}-\d{2}-\d{2})_(full|diff)\./) {
+            my ($date, $type) = ($1, $2);
+            push @{$files_by_type_and_date{$type}{$date}}, $file;
+        }
+    }
+
+    # Determine the latest date for each type
+    my %latest_date_by_type;
+    foreach my $type (keys %files_by_type_and_date) {
+        my @dates = sort keys %{$files_by_type_and_date{$type}};
+        $latest_date_by_type{$type} = $dates[-1] if @dates;
+    }
+
+    # Delete files not associated with the latest date for each type
+    foreach my $type (keys %files_by_type_and_date) {
+        foreach my $date (keys %{$files_by_type_and_date{$type}}) {
+            if ($date ne $latest_date_by_type{$type}) {  # Only keep files from the latest date
+                foreach my $old_file (@{$files_by_type_and_date{$type}{$date}}) {
+                    unlink("$directory/$old_file") or warn "Could not delete $directory/$old_file: $!";
+                    logmsg("INFO", "Deleted old $type file from $date: $old_file");
+                }
+            }
+        }
+    }
+}
+
+sub cleanup_temp_directory {
+    my ($directory) = @_;
+    opendir(my $dh, $directory) or die "Cannot open directory $directory: $!";
+    my @files = grep { -f "$directory/$_" } readdir($dh);
+    closedir($dh);
+
+    foreach my $file (@files) {
+        unlink("$directory/$file") or warn "Could not delete $directory/$file: $!";
+        logmsg("INFO", "Deleted temp file: $file");
+    }
+}
+
+# Perform cleanup
+if ($conf->{cleanup}) {
+    # Clean up the archive directory
+    cleanup_old_files($conf->{archive}, $conf->{filenameprefix});
+}
+
+# Ensure the temp directory is empty
+cleanup_temp_directory($conf->{tempdir});
 
 exit 0;
